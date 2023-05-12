@@ -2,23 +2,27 @@ package com.soundgram.chipster.view.ar
 
 import OnSwipeTouchListener
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.graphics.*
+import android.media.Image
+import android.media.ImageReader
+import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Build.VERSION_CODES
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
+import android.util.DisplayMetrics
 import android.util.Log
-import android.view.PixelCopy
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.drawToBitmap
 import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 import com.google.ar.core.Session
@@ -31,6 +35,7 @@ import com.google.ar.sceneform.math.Quaternion
 import com.google.ar.sceneform.math.Vector3
 import com.google.ar.sceneform.rendering.FixedWidthViewSizer
 import com.google.ar.sceneform.rendering.ViewRenderable
+import com.google.zxing.integration.android.IntentIntegrator.REQUEST_CODE
 import com.soundgram.chipster.R
 import com.soundgram.chipster.databinding.ActivityArBinding
 import com.soundgram.chipster.domain.model.arpoca.Location
@@ -40,8 +45,6 @@ import kotlinx.coroutines.*
 import uk.co.appoly.arcorelocation.LocationMarker
 import uk.co.appoly.arcorelocation.LocationScene
 import uk.co.appoly.arcorelocation.utils.ARLocationPermissionHelper
-import java.io.ByteArrayOutputStream
-import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
@@ -69,10 +72,15 @@ class ArActivity : AppCompatActivity() {
         Toast.makeText(this@ArActivity, it, Toast.LENGTH_SHORT).show()
     }
 
+    lateinit var mediaProjectionManager: MediaProjectionManager
+
     @RequiresApi(VERSION_CODES.N)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         ARLocationPermissionHelper.requestPermission(this)
+        mediaProjectionManager =
+            getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+
         init()
         setContentView(binding.root)
         initObserver()
@@ -386,6 +394,7 @@ class ArActivity : AppCompatActivity() {
                 closeDetailLayout()
             }
 
+
             infoIv.setOnClickListener {
                 AlertDialog.Builder(this@ArActivity)
                     .setView(R.layout.dialog_ar_info)
@@ -409,54 +418,96 @@ class ArActivity : AppCompatActivity() {
 
 
             binding.confirmBt.setOnClickListener {
-                var bitmap = Bitmap.createBitmap(
-                    binding.arSceneView.width,
-                    binding.arSceneView.height,
-                    Bitmap.Config.ARGB_8888
-                )
-                val location = IntArray(2)
-                binding.arSceneView.getLocationInWindow(location)
-                PixelCopy.request(
-                    window,
-                    Rect(
-                        location[0],
-                        location[1],
-                        location[0] + binding.arSceneView.width,
-                        location[1] + binding.arSceneView.height
-                    ),
-                    bitmap,
-                    { result ->
-                        if (result == PixelCopy.SUCCESS) {
-                            getImageUri(this@ArActivity, bitmap)
-                        }
-                    },
-                    Handler(Looper.getMainLooper())
-                )
+                val captureIntent = mediaProjectionManager.createScreenCaptureIntent()
+                startActivityForResult(captureIntent, REQUEST_CODE)
+
+
+//                var bitmap = Bitmap.createBitmap(
+//                    binding.arSceneView.width,
+//                    binding.arSceneView.height,
+//                    Bitmap.Config.ARGB_8888
+//                )
+//                val location = IntArray(2)
+//                binding.arSceneView.getLocationInWindow(location)
+//                PixelCopy.request(
+//                    window,
+//                    Rect(
+//                        location[0],
+//                        location[1],
+//                        location[0] + binding.arSceneView.width,
+//                        location[1] + binding.arSceneView.height
+//                    ),
+//                    bitmap,
+//                    { result ->
+//                        if (result == PixelCopy.SUCCESS) {
+//                            getImageUri(this@ArActivity, bitmap)
+//                        }
+//                    },
+//                    Handler(Looper.getMainLooper())
+//                )
 
 //                bitmap = Bitmap.createBitmap(arSceneView.scene.view.drawToBitmap())
 //                getImageUri(this@ArActivity, bitmap)
 
-                arSceneView.arFrame?.acquireCameraImage()?.use { image ->
-                    val yBuffer: ByteBuffer = image.planes[0].buffer
-                    val uBuffer: ByteBuffer = image.planes[1].buffer
-                    val vBuffer: ByteBuffer = image.planes[2].buffer
-
-                    val width: Int = image.width
-                    val height: Int = image.height
-                    val ySize = yBuffer.remaining()
-                    val uvSize = uBuffer.remaining() + vBuffer.remaining()
-                    val nv21YuvData = ByteArray(ySize + uvSize)
-                    yBuffer[nv21YuvData, 0, ySize]
-                    uBuffer[nv21YuvData, ySize, uBuffer.remaining()]
-                    vBuffer[nv21YuvData, ySize + uBuffer.remaining(), vBuffer.remaining()]
-                    val out = ByteArrayOutputStream()
-                    val yuvImage = YuvImage(nv21YuvData, ImageFormat.NV21, width, height, null)
-                    yuvImage.compressToJpeg(Rect(0, 0, width, height), 100, out)
-                    val jpegData = out.toByteArray()
-                    val bitmap = BitmapFactory.decodeByteArray(jpegData, 0, jpegData.size)
-                    getImageUri(this@ArActivity, bitmap)
-                }
+//                arSceneView.arFrame?.acquireCameraImage()?.use { image ->
+//                    val yBuffer: ByteBuffer = image.planes[0].buffer
+//                    val uBuffer: ByteBuffer = image.planes[1].buffer
+//                    val vBuffer: ByteBuffer = image.planes[2].buffer
+//
+//                    val width: Int = image.width
+//                    val height: Int = image.height
+//                    val ySize = yBuffer.remaining()
+//                    val uvSize = uBuffer.remaining() + vBuffer.remaining()
+//                    val nv21YuvData = ByteArray(ySize + uvSize)
+//                    yBuffer[nv21YuvData, 0, ySize]
+//                    uBuffer[nv21YuvData, ySize, uBuffer.remaining()]
+//                    vBuffer[nv21YuvData, ySize + uBuffer.remaining(), vBuffer.remaining()]
+//                    val out = ByteArrayOutputStream()
+//                    val yuvImage = YuvImage(nv21YuvData, ImageFormat.NV21, width, height, null)
+//                    yuvImage.compressToJpeg(Rect(0, 0, width, height), 100, out)
+//                    val jpegData = out.toByteArray()
+//                    val bitmap = BitmapFactory.decodeByteArray(jpegData, 0, jpegData.size)
+//                    getImageUri(this@ArActivity, bitmap)
+//                }
             }
+        }
+    }
+
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK) {
+                val mediaProjection = mediaProjectionManager.getMediaProjection(resultCode, data!!)
+                val imageReader = ImageReader.newInstance(
+                    binding.arSceneView.width,
+                    binding.arSceneView.height,
+                    PixelFormat.RGBA_8888,
+                    1
+                )
+
+                // 이미지 처리
+                handleCaptureImage(imageReader.acquireLatestImage())
+
+                mediaProjection.stop()
+            }
+        }
+    }
+
+    private fun handleCaptureImage(image: Image?) {
+        if (image != null) {
+            val buffer = image.planes[0].buffer
+            val pixels = IntArray(buffer.remaining() / 4)
+            buffer.asIntBuffer().get(pixels)
+            val bitmap = Bitmap.createBitmap(
+                image.width,
+                image.height,
+                Bitmap.Config.ARGB_8888
+            )
+            bitmap.setPixels(pixels, 0, image.width, 0, 0, image.width, image.height)
+
+            // 이미지 저장
+            getImageUri(this@ArActivity, bitmap)
         }
     }
 
