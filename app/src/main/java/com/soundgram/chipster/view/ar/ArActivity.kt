@@ -2,18 +2,23 @@ package com.soundgram.chipster.view.ar
 
 import OnSwipeTouchListener
 import android.annotation.SuppressLint
-import android.graphics.Color
+import android.content.Context
+import android.graphics.*
+import android.net.Uri
 import android.os.Build.VERSION_CODES
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.provider.MediaStore
 import android.util.Log
+import android.view.PixelCopy
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.drawToBitmap
 import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 import com.google.ar.core.Session
@@ -28,14 +33,19 @@ import com.google.ar.sceneform.rendering.FixedWidthViewSizer
 import com.google.ar.sceneform.rendering.ViewRenderable
 import com.soundgram.chipster.R
 import com.soundgram.chipster.databinding.ActivityArBinding
+import com.soundgram.chipster.domain.model.arpoca.Location
 import com.soundgram.chipster.util.*
 import com.soundgram.chipster.view.ar.model.ArPlayerType
 import kotlinx.coroutines.*
 import uk.co.appoly.arcorelocation.LocationMarker
 import uk.co.appoly.arcorelocation.LocationScene
 import uk.co.appoly.arcorelocation.utils.ARLocationPermissionHelper
+import java.io.ByteArrayOutputStream
+import java.nio.ByteBuffer
+import java.text.SimpleDateFormat
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
+
 
 class ArActivity : AppCompatActivity() {
 
@@ -173,6 +183,7 @@ class ArActivity : AppCompatActivity() {
             .setView(this, R.layout.ar_target_layout)
             .build()
 
+        // 신이 업데이트되면 계속 진행됨
         arSceneView.scene.addOnUpdateListener {
             if (!viewModel.hasFinishedLoading) {
                 return@addOnUpdateListener
@@ -182,6 +193,7 @@ class ArActivity : AppCompatActivity() {
                 locationScene?.distanceLimit = 1
                 locationScene?.anchorRefreshInterval = Int.MAX_VALUE
                 observePoca()
+                testMarkers()
             }
             val frame = arSceneView.arFrame ?: return@addOnUpdateListener
             if (frame.camera.trackingState != TrackingState.TRACKING) {
@@ -190,6 +202,85 @@ class ArActivity : AppCompatActivity() {
             locationScene?.processFrame(frame)
         }
         completeArLayout()
+    }
+
+    private fun testMarkers() {
+        val locaionList = listOf(
+            Location( // 벤쳐기업센터
+                id = 102,
+                pack_id = 183,
+                register_time = "2021-08-12 13:35:00",
+                poca_id = null,
+                address = "LG유플러스",
+                latitude = 37.598,
+                longitude = 126.8652
+            ),
+            Location( //전자관
+                id = 103,
+                pack_id = 183,
+                register_time = "2021-08-12 13:35:00",
+                poca_id = null,
+                address = "LG유플러스",
+                latitude = 37.6006,
+                longitude = 126.865
+            ),
+            Location( //화전역
+                id = 102,
+                pack_id = 183,
+                register_time = "2021-08-12 13:35:00",
+                poca_id = null,
+                address = "LG유플러스",
+                latitude = 37.603,
+                longitude = 126.8687
+            ),
+            Location( //덕양 중
+                id = 102,
+                pack_id = 183,
+                register_time = "2021-08-12 13:35:00",
+                poca_id = null,
+                address = "LG유플러스",
+                latitude = 37.6032,
+                longitude = 126.8729
+            ),
+            Location( // 동창회
+                id = 102,
+                pack_id = 183,
+                register_time = "2021-08-12 13:35:00",
+                poca_id = null,
+                address = "LG유플러스",
+                latitude = 37.5997,
+                longitude = 126.8655
+            ),
+            Location( // 도서관
+                id = 102,
+                pack_id = 183,
+                register_time = "2021-08-12 13:35:00",
+                poca_id = null,
+                address = "LG유플러스",
+                latitude = 37.5984,
+                longitude = 126.8642
+            ),
+        )
+        locaionList.forEach { item ->
+            val locationMarker = LocationMarker(
+                item.longitude,
+                item.latitude,
+                getArView(item)
+            ).apply {
+                setScaleAtDistance(false)
+                height = 0f
+                this.node.apply {
+                    val lookRotation =
+                        Quaternion.lookRotation(Vector3.zero(), Vector3.zero())
+                    worldRotation = lookRotation
+                    worldScale = Vector3.one()
+                    setRenderEvent { locationNode ->
+                        worldScale = Vector3.one()
+                    }
+                }
+            }
+            locationScene?.mLocationMarkers?.add(locationMarker)
+        }
     }
 
     private fun observePoca() {
@@ -240,85 +331,6 @@ class ArActivity : AppCompatActivity() {
 
     }
 
-//    private fun testMarkers() {
-//        val locaionList = listOf(
-//            Location( // 벤쳐기업센터
-//                id = 102,
-//                pack_id = 183,
-//                register_time = "2021-08-12 13:35:00",
-//                poca_id = null,
-//                address = "LG유플러스",
-//                latitude = 37.598,
-//                longitude = 126.8652
-//            ),
-//            Location( //전자관
-//                id = 103,
-//                pack_id = 183,
-//                register_time = "2021-08-12 13:35:00",
-//                poca_id = null,
-//                address = "LG유플러스",
-//                latitude = 37.6006,
-//                longitude = 126.865
-//            ),
-//            Location( //화전역
-//                id = 102,
-//                pack_id = 183,
-//                register_time = "2021-08-12 13:35:00",
-//                poca_id = null,
-//                address = "LG유플러스",
-//                latitude = 37.603,
-//                longitude = 126.8687
-//            ),
-//            Location( //덕양 중
-//                id = 102,
-//                pack_id = 183,
-//                register_time = "2021-08-12 13:35:00",
-//                poca_id = null,
-//                address = "LG유플러스",
-//                latitude = 37.6032,
-//                longitude = 126.8729
-//            ),
-//            Location( // 동창회
-//                id = 102,
-//                pack_id = 183,
-//                register_time = "2021-08-12 13:35:00",
-//                poca_id = null,
-//                address = "LG유플러스",
-//                latitude = 37.5997,
-//                longitude = 126.8655
-//            ),
-//            Location( // 도서관
-//                id = 102,
-//                pack_id = 183,
-//                register_time = "2021-08-12 13:35:00",
-//                poca_id = null,
-//                address = "LG유플러스",
-//                latitude = 37.5984,
-//                longitude = 126.8642
-//            ),
-//        )
-//        locaionList.forEach { item ->
-//            val locationMarker = LocationMarker(
-//                item.longitude,
-//                item.latitude,
-//                getArView(item)
-//            ).apply {
-//                setScaleAtDistance(false)
-//                height = 0f
-//                this.node.apply {
-//                    val lookRotation =
-//                        Quaternion.lookRotation(Vector3.zero(), Vector3.zero())
-//                    worldRotation = lookRotation
-//                    worldScale = Vector3.one()
-//                    setRenderEvent { locationNode ->
-//                        worldScale = Vector3.one()
-//                    }
-//                }
-//            }
-//            locationScene.mLocationMarkers?.add(locationMarker)
-//        }
-//    }
-
     @RequiresApi(VERSION_CODES.N)
     private fun completeArLayout() {
         CompletableFuture
@@ -341,9 +353,11 @@ class ArActivity : AppCompatActivity() {
     }
 
     /** ArActivity에 필요한 리스너를 정의 */
+    @RequiresApi(VERSION_CODES.O)
     @SuppressLint("ClickableViewAccessibility")
     private fun initListener() {
         binding.apply {
+            /** 카드모션 획득 끝났을 때 돌리는 이미지 */
             getMotionEndedIv.setOnTouchListener(object :
                 OnSwipeTouchListener(context = this@ArActivity) {
                 override fun onSwiperVertical() {
@@ -392,10 +406,74 @@ class ArActivity : AppCompatActivity() {
             icBinderIv.setOnClickListener {
                 onFinish(MOVE_BINDER)
             }
+
+
+            binding.confirmBt.setOnClickListener {
+                var bitmap = Bitmap.createBitmap(
+                    binding.arSceneView.width,
+                    binding.arSceneView.height,
+                    Bitmap.Config.ARGB_8888
+                )
+                val location = IntArray(2)
+                binding.arSceneView.getLocationInWindow(location)
+                PixelCopy.request(
+                    window,
+                    Rect(
+                        location[0],
+                        location[1],
+                        location[0] + binding.arSceneView.width,
+                        location[1] + binding.arSceneView.height
+                    ),
+                    bitmap,
+                    { result ->
+                        if (result == PixelCopy.SUCCESS) {
+                            getImageUri(this@ArActivity, bitmap)
+                        }
+                    },
+                    Handler(Looper.getMainLooper())
+                )
+
+//                bitmap = Bitmap.createBitmap(arSceneView.scene.view.drawToBitmap())
+//                getImageUri(this@ArActivity, bitmap)
+
+                arSceneView.arFrame?.acquireCameraImage()?.use { image ->
+                    val yBuffer: ByteBuffer = image.planes[0].buffer
+                    val uBuffer: ByteBuffer = image.planes[1].buffer
+                    val vBuffer: ByteBuffer = image.planes[2].buffer
+
+                    val width: Int = image.width
+                    val height: Int = image.height
+                    val ySize = yBuffer.remaining()
+                    val uvSize = uBuffer.remaining() + vBuffer.remaining()
+                    val nv21YuvData = ByteArray(ySize + uvSize)
+                    yBuffer[nv21YuvData, 0, ySize]
+                    uBuffer[nv21YuvData, ySize, uBuffer.remaining()]
+                    vBuffer[nv21YuvData, ySize + uBuffer.remaining(), vBuffer.remaining()]
+                    val out = ByteArrayOutputStream()
+                    val yuvImage = YuvImage(nv21YuvData, ImageFormat.NV21, width, height, null)
+                    yuvImage.compressToJpeg(Rect(0, 0, width, height), 100, out)
+                    val jpegData = out.toByteArray()
+                    val bitmap = BitmapFactory.decodeByteArray(jpegData, 0, jpegData.size)
+                    getImageUri(this@ArActivity, bitmap)
+                }
+            }
         }
     }
 
-    private fun getArView(item: com.soundgram.chipster.domain.model.arpoca.Location): Node {
+
+    private fun getImageUri(context: Context, bitmap: Bitmap): Uri {
+        val fileName = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(System.currentTimeMillis())
+        return Uri.parse(
+            MediaStore.Images.Media.insertImage(
+                context.contentResolver,
+                bitmap,
+                fileName,
+                null
+            )
+        )
+    }
+
+    private fun getArView(item: Location): Node {
         val base = Node()
         base.renderable = arLayoutRenderable
 
@@ -586,9 +664,6 @@ class ArActivity : AppCompatActivity() {
         viewModel.userLong = gpsTracker.userlongitude
     }
 
-    /**
-     * Make sure we call locationScene.pause();
-     */
     public override fun onPause() {
         super.onPause()
         locationScene?.pause()

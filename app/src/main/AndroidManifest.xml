@@ -68,11 +68,6 @@
             android:name=".view.LoginActivity"
             android:exported="true"
             android:theme="@style/FullScreenTheme">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
 
             <meta-data
                 android:name="android.app.lib_name"
@@ -92,8 +87,22 @@
             android:theme="@style/FullScreenTheme" />
 
         <activity
+            android:name=".view.cameraAr.CameraArActivity"
+            android:exported="true"
+            android:theme="@style/FullScreenTheme">
+
+        </activity>
+
+        <activity
             android:name=".view.ar.ArActivity"
-            android:theme="@style/FullScreenTheme" />
+            android:theme="@style/FullScreenTheme"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>
