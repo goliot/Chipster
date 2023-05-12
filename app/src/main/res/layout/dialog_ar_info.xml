@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:background="#35353535">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="20dp">
+
+        <ImageView
+            android:layout_width="124dp"
+            android:layout_height="70dp"
+            android:src="@drawable/img_info"
+            android:scaleType="centerCrop" />
+
+        <LinearLayout
+            android:layout_marginHorizontal="20dp"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/poca_tv"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="POCA"
+                    app:layout_constraintTop_toTopOf="parent"
+                    android:textSize="18sp"
+                    android:layout_gravity="center" />
+
+                <TextView
+                    android:id="@+id/method_tv"
+                    android:layout_width="wrap_content"
+                    app:layout_constraintStart_toEndOf="@id/poca_tv"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="18sp"
+                    android:layout_gravity="center"
+                    android:textStyle="bold"
+                    android:textAlignment="center"
+                    android:text=" 사용" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/info_tv"
+                android:layout_width="wrap_content"
+                app:layout_constraintTop_toBottomOf="@+id/poca_tv"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:layout_gravity="center"
+                android:textStyle="bold"
+                android:textAlignment="center"
+                android:text="방법 안내" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginHorizontal="20dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1. "
+                android:textSize="14sp"
+                android:layout_marginTop="15dp"
+                android:textColor="#353535" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="모바일 음반 내 AR 포카 메뉴를 열고 앱을 통해 랜덤 포카 위치를 확인하세요."
+                android:textSize="14sp"
+                android:layout_marginTop="15dp"
+                android:textColor="#353535" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2. "
+                android:textSize="14sp"
+                android:layout_marginTop="15dp"
+                android:textColor="#353535" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="포카가 있는 장소를 방문해 AR 포카 메뉴를 열어 촬영 화면을 비추면 랜덤 포카가 등장합니다."
+                android:textSize="14sp"
+                android:layout_marginTop="15dp"
+                android:textColor="#353535" />
+        </LinearLayout>
+
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="3. "
+                android:textSize="14sp"
+                android:layout_marginTop="15dp"
+                android:textColor="#353535" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="등장한 랜덤 포카를 상하로 드래그하면 포카를 획득할 수 있습니다."
+                android:textSize="14sp"
+                android:layout_marginTop="15dp"
+                android:textColor="#353535" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="4. "
+                android:textSize="14sp"
+                android:layout_marginTop="15dp"
+                android:textColor="#353535" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="획득한 포카는 바인더에서 확인할 수 있습니다."
+                android:textSize="14sp"
+                android:layout_marginTop="15dp"
+                android:textColor="#353535" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:padding="10dp"
+        android:background="@color/white">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:textSize="14sp"
+            android:textColor="#353535"
+            android:layout_height="wrap_content"
+            android:text="※" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:textColor="#353535"
+            android:textSize="14sp"
+            android:text=" 참고사항 : " />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="14sp"
+            android:textColor="#353535"
+            android:text=" 바인더의 중복 카드는\n 획득 수량에 포함되지 않습니다." />
+    </LinearLayout>
+
+
+</LinearLayout>
