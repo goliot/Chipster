@@ -15,7 +15,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.MediaStore
-import android.util.DisplayMetrics
 import android.util.Log
 import android.view.animation.Animation
 import android.view.animation.AnimationUtils
@@ -38,9 +37,9 @@ import com.google.ar.sceneform.rendering.ViewRenderable
 import com.google.zxing.integration.android.IntentIntegrator.REQUEST_CODE
 import com.soundgram.chipster.R
 import com.soundgram.chipster.databinding.ActivityArBinding
-import com.soundgram.chipster.domain.model.arpoca.Location
 import com.soundgram.chipster.util.*
-import com.soundgram.chipster.view.ar.model.ArPlayerType
+import com.soundgram.chipster.domain.model.ArPlayerType
+import com.soundgram.chipster.domain.model.Poca
 import kotlinx.coroutines.*
 import uk.co.appoly.arcorelocation.LocationMarker
 import uk.co.appoly.arcorelocation.LocationScene
@@ -90,9 +89,8 @@ class ArActivity : AppCompatActivity() {
 
     private fun init() {
         totId = intent.getIntExtra("totId", 0) // 테스트용 185
-        packId = intent.getIntExtra("packId", 0) // 테스트용 185
+        packId = intent.getIntExtra("packId", 307) // 테스트용 185
         userId = intent.getIntExtra("userId", 0) // 1025
-
         arPlayerType = if (totId != 0) {
             ArPlayerType.CHECKIN
         } else {
@@ -105,14 +103,9 @@ class ArActivity : AppCompatActivity() {
 
         when (arPlayerType) {
             ArPlayerType.CHECKIN -> {
-                viewModel.getTotalCheckInData(
-                    totId = totId,
-                    userId = userId,
-                    onError = showToastMessage
-                )
             }
             ArPlayerType.POCA -> {
-                viewModel.getTotalDataWithPack(
+                viewModel.getPocasWithPackId(
                     packId = packId,
                     onError = showToastMessage
                 )
@@ -129,38 +122,38 @@ class ArActivity : AppCompatActivity() {
             binding.apply {
                 detailCircleIv.setImageWithUrl(
                     this@ArActivity,
-                    url = viewModel.packInfo.value?.pack_target_img,
+                    url = viewModel.packInfo.value?.targetImg,
                 )
                 photoContentIv.setImageWithUrl(
                     this@ArActivity,
-                    url = poca.poca_img,
+                    url = poca.img,
                 )
                 detailPhotoIv.setImageWithUrl(
                     this@ArActivity,
-                    url = poca.poca_img,
+                    url = poca.img,
                 )
 
-                pocaCategoryTv.text = viewModel.categories.find(poca.poca_category_id)
+//                pocaCategoryTv.text = viewModel.categories.find(poca.poca_category_id)
 
-                val pocaLevelText = when (poca.poca_level) {
-                    1 -> viewModel.packInfo.value?.level1msg.toString()
-                    2 -> viewModel.packInfo.value?.level2msg.toString()
-                    3 -> viewModel.packInfo.value?.level3msg.toString()
-                    4 -> viewModel.packInfo.value?.level4msg.toString()
-                    else -> viewModel.packInfo.value?.level5msg.toString()
+                val pocaLevelText = when (poca.level) {
+                    1 -> viewModel.packInfo.value?.level1Msg.toString()
+                    2 -> viewModel.packInfo.value?.level2Msg.toString()
+                    3 -> viewModel.packInfo.value?.level3Msg.toString()
+                    4 -> viewModel.packInfo.value?.level4Msg.toString()
+                    else -> viewModel.packInfo.value?.level5Msg.toString()
                 }
                 pocaLevelTv.text = pocaLevelText
 
 
                 val registerTimeText = StringBuilder()
-                registerTimeText.append("획득 날짜 : ${poca.register_time}\n")
-                registerTimeText.append(
-                    "획득 지역 : ${
-                        viewModel.locations.find(poca.location_id)
-                    }"
-                )
+//                registerTimeText.append("획득 날짜 : ${poca.register_time}\n")
+//                registerTimeText.append(
+//                    "획득 지역 : ${
+//                        viewModel.locations.find(poca.location_id)
+//                    }"
+//                )
                 registerTimeTv.text = registerTimeText
-                setRankingLayout(poca.poca_level)
+                setRankingLayout(poca.level ?: 1)
             }
         }
 
@@ -168,10 +161,9 @@ class ArActivity : AppCompatActivity() {
         viewModel.packInfo.observe(this) {
             arLayout.thenAccept { viewRenderable ->
                 Glide.with(this)
-                    .load(viewModel.packInfo.value?.pack_target_img)
+                    .load(viewModel.packInfo.value?.targetImg)
                     .error(R.drawable.ic_map)
                     .into(viewRenderable.view.findViewById(R.id.ar_target_iv))
-
                 viewRenderable.sizer = FixedWidthViewSizer(0.2f)
             }
         }
@@ -201,7 +193,6 @@ class ArActivity : AppCompatActivity() {
                 locationScene?.distanceLimit = 1
                 locationScene?.anchorRefreshInterval = Int.MAX_VALUE
                 observePoca()
-                testMarkers()
             }
             val frame = arSceneView.arFrame ?: return@addOnUpdateListener
             if (frame.camera.trackingState != TrackingState.TRACKING) {
@@ -212,113 +203,101 @@ class ArActivity : AppCompatActivity() {
         completeArLayout()
     }
 
-    private fun testMarkers() {
-        val locaionList = listOf(
-            Location( // 벤쳐기업센터
-                id = 102,
-                pack_id = 183,
-                register_time = "2021-08-12 13:35:00",
-                poca_id = null,
-                address = "LG유플러스",
-                latitude = 37.598,
-                longitude = 126.8652
-            ),
-            Location( //전자관
-                id = 103,
-                pack_id = 183,
-                register_time = "2021-08-12 13:35:00",
-                poca_id = null,
-                address = "LG유플러스",
-                latitude = 37.6006,
-                longitude = 126.865
-            ),
-            Location( //화전역
-                id = 102,
-                pack_id = 183,
-                register_time = "2021-08-12 13:35:00",
-                poca_id = null,
-                address = "LG유플러스",
-                latitude = 37.603,
-                longitude = 126.8687
-            ),
-            Location( //덕양 중
-                id = 102,
-                pack_id = 183,
-                register_time = "2021-08-12 13:35:00",
-                poca_id = null,
-                address = "LG유플러스",
-                latitude = 37.6032,
-                longitude = 126.8729
-            ),
-            Location( // 동창회
-                id = 102,
-                pack_id = 183,
-                register_time = "2021-08-12 13:35:00",
-                poca_id = null,
-                address = "LG유플러스",
-                latitude = 37.5997,
-                longitude = 126.8655
-            ),
-            Location( // 도서관
-                id = 102,
-                pack_id = 183,
-                register_time = "2021-08-12 13:35:00",
-                poca_id = null,
-                address = "LG유플러스",
-                latitude = 37.5984,
-                longitude = 126.8642
-            ),
-        )
-        locaionList.forEach { item ->
-            val locationMarker = LocationMarker(
-                item.longitude,
-                item.latitude,
-                getArView(item)
-            ).apply {
-                setScaleAtDistance(false)
-                height = 0f
-                this.node.apply {
-                    val lookRotation =
-                        Quaternion.lookRotation(Vector3.zero(), Vector3.zero())
-                    worldRotation = lookRotation
-                    worldScale = Vector3.one()
-                    setRenderEvent { locationNode ->
-                        worldScale = Vector3.one()
-                    }
-                }
-            }
-            locationScene?.mLocationMarkers?.add(locationMarker)
-        }
-    }
+//    private fun testMarkers() {
+//        val locaionList = listOf(
+//            Location( // 벤쳐기업센터
+//                id = 102,
+//                pack_id = 183,
+//                register_time = "2021-08-12 13:35:00",
+//                poca_id = null,
+//                address = "LG유플러스",
+//                latitude = 37.598,
+//                longitude = 126.8652
+//            ),
+//            Location( //전자관
+//                id = 103,
+//                pack_id = 183,
+//                register_time = "2021-08-12 13:35:00",
+//                poca_id = null,
+//                address = "LG유플러스",
+//                latitude = 37.6006,
+//                longitude = 126.865
+//            ),
+//            Location( //화전역
+//                id = 102,
+//                pack_id = 183,
+//                register_time = "2021-08-12 13:35:00",
+//                poca_id = null,
+//                address = "LG유플러스",
+//                latitude = 37.603,
+//                longitude = 126.8687
+//            ),
+//            Location( //덕양 중
+//                id = 102,
+//                pack_id = 183,
+//                register_time = "2021-08-12 13:35:00",
+//                poca_id = null,
+//                address = "LG유플러스",
+//                latitude = 37.6032,
+//                longitude = 126.8729
+//            ),
+//            Location( // 동창회
+//                id = 102,
+//                pack_id = 183,
+//                register_time = "2021-08-12 13:35:00",
+//                poca_id = null,
+//                address = "LG유플러스",
+//                latitude = 37.5997,
+//                longitude = 126.8655
+//            ),
+//            Location( // 도서관
+//                id = 102,
+//                pack_id = 183,
+//                register_time = "2021-08-12 13:35:00",
+//                poca_id = null,
+//                address = "LG유플러스",
+//                latitude = 37.5984,
+//                longitude = 126.8642
+//            ),
+//        )
+//        locaionList.forEach { item ->
+//            val locationMarker = LocationMarker(
+//                item.longitude,
+//                item.latitude,
+//                getArView(item)
+//            ).apply {
+//                setScaleAtDistance(false)
+//                height = 0f
+//                this.node.apply {
+//                    val lookRotation =
+//                        Quaternion.lookRotation(Vector3.zero(), Vector3.zero())
+//                    worldRotation = lookRotation
+//                    worldScale = Vector3.one()
+//                    setRenderEvent { locationNode ->
+//                        worldScale = Vector3.one()
+//                    }
+//                }
+//            }
+//            locationScene?.mLocationMarkers?.add(locationMarker)
+//        }
+//    }
 
     private fun observePoca() {
-        viewModel.arPocaLocations.observe(this) {
-            it?.minByOrNull { location ->
+        viewModel.pocas.observe(this) { pocas ->
+            val closedPoca = pocas?.minByOrNull { poca ->
                 distanceOf(
-                    location.latitude,
-                    location.longitude,
+                    poca.latitude,
+                    poca.longitude,
                     gpsTracker.userlatitude,
                     gpsTracker.userlongitude,
                     "meter"
                 )
-            }?.let { item ->
-                Log.i("ArpocaActivity", item.toString())
-                // 100미터 이하라면 추가
-//                if (it.minOf { location ->
-//                        distance(
-//                            location.latitude,
-//                            location.longitude,
-//                            gpsTracker.userlatitude,
-//                            gpsTracker.userlongitude,
-//                            "meter"
-//                        )
-//                    } > DISTANCE_METER_FROM_USER) return@let
-                viewModel.updatePack(item.pack_id)
-                Log.i("dlgocks1 - selectedPack", viewModel.packInfo.toString())
+            }
+            closedPoca?.let {
                 val locationMarker = LocationMarker(
-                    item.longitude,
-                    item.latitude,
-                    getArView(item)
+                    it.longitude,
+                    it.latitude,
+                    getArView(it)
                 ).apply {
                     setScaleAtDistance(false)
                     height = 0f
@@ -336,7 +315,49 @@ class ArActivity : AppCompatActivity() {
                 locationScene?.mLocationMarkers?.add(locationMarker)
             }
         }
-
+//        viewModel.arPocaLocations.observe(this) {
+//            it?.minByOrNull { location ->
+//                distanceOf(
+//                    location.latitude,
+//                    location.longitude,
+//                    gpsTracker.userlatitude,
+//                    gpsTracker.userlongitude,
+//                    "meter"
+//                )
+//            }?.let { item ->
+//                Log.i("ArpocaActivity", item.toString())
+//                // 100미터 이하라면 추가
+////                if (it.minOf { location ->
+////                        distance(
+////                            location.latitude,
+////                            location.longitude,
+////                            gpsTracker.userlatitude,
+////                            gpsTracker.userlongitude,
+////                            "meter"
+////                        )
+////                    } > DISTANCE_METER_FROM_USER) return@let
+//                Log.i("dlgocks1 - selectedPack", viewModel.packInfo.toString())
+//                val locationMarker = LocationMarker(
+//                    item.longitude,
+//                    item.latitude,
+//                    getArView(item)
+//                ).apply {
+//                    setScaleAtDistance(false)
+//                    height = 0f
+//                    this.node.apply {
+//                        val lookRotation =
+//                            Quaternion.lookRotation(Vector3.zero(), Vector3.zero())
+//                        worldRotation = lookRotation
+//                        worldPosition = Vector3.one()
+//                        worldScale = Vector3.one()
+//                        setRenderEvent {
+//                            worldScale = Vector3.one()
+//                        }
+//                    }
+//                }
+//                locationScene?.mLocationMarkers?.add(locationMarker)
+//            }
+//        }
     }
 
     @RequiresApi(VERSION_CODES.N)
@@ -416,60 +437,10 @@ class ArActivity : AppCompatActivity() {
                 onFinish(MOVE_BINDER)
             }
 
-
-            binding.confirmBt.setOnClickListener {
-                val captureIntent = mediaProjectionManager.createScreenCaptureIntent()
-                startActivityForResult(captureIntent, REQUEST_CODE)
-
-
-//                var bitmap = Bitmap.createBitmap(
-//                    binding.arSceneView.width,
-//                    binding.arSceneView.height,
-//                    Bitmap.Config.ARGB_8888
-//                )
-//                val location = IntArray(2)
-//                binding.arSceneView.getLocationInWindow(location)
-//                PixelCopy.request(
-//                    window,
-//                    Rect(
-//                        location[0],
-//                        location[1],
-//                        location[0] + binding.arSceneView.width,
-//                        location[1] + binding.arSceneView.height
-//                    ),
-//                    bitmap,
-//                    { result ->
-//                        if (result == PixelCopy.SUCCESS) {
-//                            getImageUri(this@ArActivity, bitmap)
-//                        }
-//                    },
-//                    Handler(Looper.getMainLooper())
-//                )
-
-//                bitmap = Bitmap.createBitmap(arSceneView.scene.view.drawToBitmap())
-//                getImageUri(this@ArActivity, bitmap)
-
-//                arSceneView.arFrame?.acquireCameraImage()?.use { image ->
-//                    val yBuffer: ByteBuffer = image.planes[0].buffer
-//                    val uBuffer: ByteBuffer = image.planes[1].buffer
-//                    val vBuffer: ByteBuffer = image.planes[2].buffer
-//
-//                    val width: Int = image.width
-//                    val height: Int = image.height
-//                    val ySize = yBuffer.remaining()
-//                    val uvSize = uBuffer.remaining() + vBuffer.remaining()
-//                    val nv21YuvData = ByteArray(ySize + uvSize)
-//                    yBuffer[nv21YuvData, 0, ySize]
-//                    uBuffer[nv21YuvData, ySize, uBuffer.remaining()]
-//                    vBuffer[nv21YuvData, ySize + uBuffer.remaining(), vBuffer.remaining()]
-//                    val out = ByteArrayOutputStream()
-//                    val yuvImage = YuvImage(nv21YuvData, ImageFormat.NV21, width, height, null)
-//                    yuvImage.compressToJpeg(Rect(0, 0, width, height), 100, out)
-//                    val jpegData = out.toByteArray()
-//                    val bitmap = BitmapFactory.decodeByteArray(jpegData, 0, jpegData.size)
-//                    getImageUri(this@ArActivity, bitmap)
-//                }
-            }
+//            binding.confirmBt.setOnClickListener {
+//                val captureIntent = mediaProjectionManager.createScreenCaptureIntent()
+//                startActivityForResult(captureIntent, REQUEST_CODE)
+//            }
         }
     }
 
@@ -478,7 +449,8 @@ class ArActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
-                val mediaProjection = mediaProjectionManager.getMediaProjection(resultCode, data!!)
+                val mediaProjection =
+                    mediaProjectionManager.getMediaProjection(resultCode, data!!)
                 val imageReader = ImageReader.newInstance(
                     binding.arSceneView.width,
                     binding.arSceneView.height,
@@ -513,7 +485,8 @@ class ArActivity : AppCompatActivity() {
 
 
     private fun getImageUri(context: Context, bitmap: Bitmap): Uri {
-        val fileName = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(System.currentTimeMillis())
+        val fileName =
+            SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(System.currentTimeMillis())
         return Uri.parse(
             MediaStore.Images.Media.insertImage(
                 context.contentResolver,
@@ -524,7 +497,7 @@ class ArActivity : AppCompatActivity() {
         )
     }
 
-    private fun getArView(item: Location): Node {
+    private fun getArView(item: Poca): Node {
         val base = Node()
         base.renderable = arLayoutRenderable
 
@@ -532,41 +505,40 @@ class ArActivity : AppCompatActivity() {
             with(viewModel) {
                 if (isLoading.value == true) return@setOnTouchListener false
                 setLoadingTrue()
-                setSelectedPoca(item.poca_id)
-
-                setUserDataWithPack(
-                    userId = userId,
-                    userLocationId = item.id,
-                    onError = {
-                        showToastMessage(it)
-                        setLoadingFalse()
-                    },
-                    onSuccess = {
-                        onPocaClick(
-                            context = this@ArActivity,
-                            packId = packId,
-                            userId = userId,
-                            totId = totId,
-                            arPlayerType = arPlayerType,
-                            onDrawableReady = { animatedDrawable ->
-                                binding.getMotionIv.setImageDrawable(animatedDrawable)
-                                animatedDrawable?.start()
-                                onTouchMarker()
-                                Handler(Looper.getMainLooper()).postDelayed({
-                                    binding.getMotionEndedIv.setImageWithUrl(
-                                        this@ArActivity,
-                                        url = packInfo.value?.pack_card_img
-                                    )
-                                    binding.getMotionEndedIv.show()
-                                    binding.getMotionTv.text = "카드를 위아래로 휘리릭 돌려 보라구~!"
-                                    binding.getMotionIv.setImageResource(0)
-                                }, 3200)
-                            },
-                            onError = { errormsg ->
-                                showToastMessage(errormsg)
-                            }
-                        )
-                    })
+                setSelectedPoca(item)
+//                setUserDataWithPack(
+//                    userId = userId,
+//                    userLocationId = item.id,
+//                    onError = {
+//                        showToastMessage(it)
+//                        setLoadingFalse()
+//                    },
+//                    onSuccess = {
+//                        onPocaClick(
+//                            context = this@ArActivity,
+//                            packId = packId,
+//                            userId = userId,
+//                            totId = totId,
+//                            arPlayerType = arPlayerType,
+//                            onDrawableReady = { animatedDrawable ->
+//                                binding.getMotionIv.setImageDrawable(animatedDrawable)
+//                                animatedDrawable?.start()
+//                                onTouchMarker()
+//                                Handler(Looper.getMainLooper()).postDelayed({
+//                                    binding.getMotionEndedIv.setImageWithUrl(
+//                                        this@ArActivity,
+//                                        url = packInfo.value?.cardImg
+//                                    )
+//                                    binding.getMotionEndedIv.show()
+//                                    binding.getMotionTv.text = "카드를 위아래로 휘리릭 돌려 보라구~!"
+//                                    binding.getMotionIv.setImageResource(0)
+//                                }, 3200)
+//                            },
+//                            onError = { errormsg ->
+//                                showToastMessage(errormsg)
+//                            }
+//                        )
+//                    })
             }
             false
         }
@@ -678,7 +650,10 @@ class ArActivity : AppCompatActivity() {
         }
         doubleBackToExitPressedOnce = true
         showToastMessage("한번 더 누를시 AR이 종료됩니다.")
-        Handler(Looper.getMainLooper()).postDelayed({ doubleBackToExitPressedOnce = false }, 2000)
+        Handler(Looper.getMainLooper()).postDelayed(
+            { doubleBackToExitPressedOnce = false },
+            2000
+        )
     }
 
     override fun onResume() {

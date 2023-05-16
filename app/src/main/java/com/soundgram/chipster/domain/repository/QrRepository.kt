@@ -1,5 +1,6 @@
 package com.soundgram.chipster.domain.repository
 
+import com.soundgram.chipster.domain.model.PackInfo
 import com.soundgram.chipster.network.ApiResult
 import com.soundgram.chipster.network.ChipsterService
 import com.soundgram.chipster.network.response.GetPocasResponse
@@ -8,15 +9,15 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 
-class ArpocaRepository(
+class QrRepository(
     val service: ChipsterService,
 ) {
-    fun getPocasWithPackId(
+    fun getPackInfo(
         packId: Int,
         onLoading: () -> Unit = {},
         onComplete: () -> Unit = {},
-    ): Flow<ApiResult<GetPocasResponse>> = safeFlow {
-        service.getPocasWithPackID(packId = packId)
+    ): Flow<ApiResult<PackInfo>> = safeFlow {
+        service.getPackInfo(packId = packId)
     }.onStart { onLoading() }.onCompletion { onComplete() }
 
 }

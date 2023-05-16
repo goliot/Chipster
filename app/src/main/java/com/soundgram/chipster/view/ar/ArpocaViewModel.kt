@@ -3,17 +3,18 @@ package com.soundgram.chipster.view.ar
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.AnimationDrawable
+import android.location.Location
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.soundgram.chipster.domain.model.arpoca.*
 import com.soundgram.chipster.domain.repository.ArpocaRepository
-import com.soundgram.chipster.network.ArService
-import com.soundgram.chipster.network.ResponseCodes.ERROR_ALREAY_GET_CARDED
-import com.soundgram.chipster.network.ResponseCodes.ONSUCCESS
+import com.soundgram.chipster.network.ChipsterService
 import com.soundgram.chipster.network.RestfulAdapter
-import com.soundgram.chipster.view.ar.model.ArPlayerType
+import com.soundgram.chipster.domain.model.PackInfo
+import com.soundgram.chipster.domain.model.Poca
+import com.soundgram.chipster.domain.model.ArPlayerType
+import com.soundgram.chipster.network.RestfulAdapter.chipsterService
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -26,23 +27,9 @@ import java.net.URL
 
 class ArpocaViewModel : ViewModel() {
 
-//    val retrofit = Retrofit
-//        .Builder()
-//        .baseUrl("http://devapi.soundgram.co.kr:10080/")
-//        .client(
-//            OkHttpClient.Builder().addInterceptor(
-//                HttpLoggingInterceptor().apply {
-//                    level = HttpLoggingInterceptor.Level.BODY
-//                }).build()
-//        ).addConverterFactory(GsonConverterFactory.create())
-//        .build()
 
     private val arpocaRepository: ArpocaRepository = ArpocaRepository(
-        service = RestfulAdapter.createService(
-            null,
-            ArService::class.java,
-            "root", "1Howtobiz!"
-        )
+        service = RestfulAdapter.chipsterService
     )
 
     // 카드가 회전하고 있는지
@@ -50,23 +37,20 @@ class ArpocaViewModel : ViewModel() {
     var installRequested = false
     var hasFinishedLoading = false
 
-    // 전체포카에 대한 정보들
-    var pocaList: PocaList = PocaList(emptyList())
-    var packList = listOf<Pack>()
-    lateinit var categories: CategoryList
-    lateinit var locations: LocationList
-
     var userLat = 0.0
     var userLong = 0.0
 
     private val _arPocaLocations: MutableLiveData<List<Location>> = MutableLiveData(emptyList())
     val arPocaLocations: LiveData<List<Location>> = _arPocaLocations
 
+    private val _pocas: MutableLiveData<List<Poca>> = MutableLiveData(emptyList())
+    val pocas: LiveData<List<Poca>> get() = _pocas
+
     private val _selectedPoca: MutableLiveData<Poca> = MutableLiveData()
     val selectedPoca: LiveData<Poca> get() = _selectedPoca
 
-    private val _packInfo = MutableLiveData<Pack>()
-    val packInfo: LiveData<Pack> get() = _packInfo
+    private val _packInfo = MutableLiveData<PackInfo>()
+    val packInfo: LiveData<PackInfo> get() = _packInfo
 
     private val _isLoading: MutableLiveData<Boolean> = MutableLiveData(false)
     val isLoading: LiveData<Boolean> get() = _isLoading
@@ -83,102 +67,61 @@ class ArpocaViewModel : ViewModel() {
         _detailCardVisible.value = visible
     }
 
-    fun getTotalCheckInData(
-        totId: Int,
-        userId: Int,
-        onError: (String) -> Unit
-    ) = viewModelScope.launch {
-        arpocaRepository.getTotalCheckInData(
-            totId = totId,
-            userId = userId,
-            onLoading = ::setLoadingTrue,
-            onComplete = ::setLoadingFalse
-        ).collectLatest { result ->
-            result.handleResponse(onError = onError) { res ->
-                when (res.response_code) {
-                    ONSUCCESS -> {
-                        pocaList =
-                            PocaList(res.pocas.filter { it.max_qty == null || it.max_qty > it.cur_qty })
-                        categories = CategoryList(res.categories)
-                        packList = res.packs
-                        // _packInfo.value = res.packs.first() // TODO 팩이 여러개가 될 수도 있을 듯 이부분 수정 필요
-                        _arPocaLocations.value = compareQty(res.locations)
-                        locations = LocationList(compareQty(res.locations))
-                        setScanningText()
-                    }
-                    else -> {
-                        onError("요청 값이 잘못됬습니다.")
-                    }
-                }
-            }
-        }
-    }
-
-    fun getTotalDataWithPack(
+    //    fun getTotalCheckInData(
+//        totId: Int,
+//        userId: Int,
+//        onError: (String) -> Unit
+//    ) = viewModelScope.launch {
+//        arpocaRepository.getTotalCheckInData(
+//            totId = totId,
+//            userId = userId,
+//            onLoading = ::setLoadingTrue,
+//            onComplete = ::setLoadingFalse
+//        ).collectLatest { result ->
+//            result.handleResponse(onError = onError) { res ->
+//                when (res.response_code) {
+//                    ONSUCCESS -> {
+//                        pocaList =
+//                            PocaList(res.pocas.filter { it.max_qty == null || it.max_qty > it.cur_qty })
+//                        categories = CategoryList(res.categories)
+//                        packList = res.packs
+//                        // _packInfo.value = res.packs.first() // TODO 팩이 여러개가 될 수도 있을 듯 이부분 수정 필요
+//                        _arPocaLocations.value = compareQty(res.locations)
+//                        locations = LocationList(compareQty(res.locations))
+//                        setScanningText()
+//                    }
+//                    else -> {
+//                        onError("요청 값이 잘못됬습니다.")
+//                    }
+//                }
+//            }
+//        }
+//    }
+//
+    fun getPocasWithPackId(
         packId: Int,
         onError: (String) -> Unit
     ) = viewModelScope.launch {
-        arpocaRepository.getTotalDataWithPack(
-            pacKId = packId,
+        arpocaRepository.getPocasWithPackId(
+            packId = packId,
             onLoading = ::setLoadingTrue,
             onComplete = ::setLoadingFalse
         ).collectLatest { result ->
             result.handleResponse(onError = onError) { res ->
-                when (res.response_code) {
-                    ONSUCCESS -> {
-                        pocaList =
-                            PocaList(PocaList(res.pocas.filter { it.max_qty == null || it.max_qty > it.cur_qty }))
-                        categories = CategoryList(res.categories)
-                        packList = res.packs
-//                        _packInfo.value = res.packs.first() // TODO 팩이 여러개가 될 수도 있을 듯 이부분 수정 필요
-                        _arPocaLocations.value = compareQty(res.locations)
-                        locations = LocationList(compareQty(res.locations))
-                        setScanningText()
-                    }
-                    else -> {
-                        onError("요청 값이 잘못됬습니다.")
-                    }
-                }
+                _packInfo.value = res.packInfo
+                _pocas.value = res.pocas
+                setScanningText()
             }
         }
-    }
-
-    /** max_qty, cur_qty를 비교하여 올바른 location값만 추출한다. */
-    private fun compareQty(locations: List<Location>): List<Location> {
-        val result = mutableListOf<Location>()
-        val flag = pocaList.filter { it.location_id == null }
-            .filter { it.max_qty == null || it.max_qty > it.cur_qty }.isNotEmpty()
-        locations.forEach { item ->
-            /** poca_id가 null일 때 location_id가 null인 포카들 중 획득할 포카가 있는 경우에만 추가한다. */
-            if (item.poca_id == null && flag) {
-                result.add(item)
-            }
-
-            /** poca_id가 null이 아닌데 max_qty > cur_qty일 경우 추가한다.*/
-            item.poca_id?.let { id ->
-                pocaList.find { poca ->
-                    poca.id == id
-                }.let { poca ->
-                    if (poca?.max_qty == null) {
-                        result.add(item)
-                        return@forEach
-                    }
-                    if (poca.max_qty > poca.cur_qty) {
-                        result.add(item)
-                    }
-                }
-            }
-        }
-        return result.toList()
     }
 
     private fun setScanningText() {
-        val minDistance = locations.getMinDistance(userLat, userLong) ?: 1500.0
-
-        if (pocaList.isEmpty()) {
-            _scanningText.value = "획득가능한 포카가 없어요..!"
-            return
-        }
+//        val minDistance = locations.getMinDistance(userLat, userLong) ?: 1500.0
+//        if (pocaList.isEmpty()) {
+//            _scanningText.value = "획득가능한 포카가 없어요..!"
+//            return
+//        }
+        val minDistance = 600
 
         if (minDistance > 500) {
             _scanningText.value = POCATEXT_1KM
@@ -196,49 +139,49 @@ class ArpocaViewModel : ViewModel() {
     }
 
     /** poca_id를 사용해 선택중인 포카를 바꾼다. */
-    fun setSelectedPoca(pocaId: Int?) {
-        _selectedPoca.value = pocaList.select(pocaId ?: pocaList.randomPocaId())
+    fun setSelectedPoca(poca: Poca) {
+        _selectedPoca.value = poca
     }
 
     /** 포카를 클릭했을 때 클릭했다는 값을 서버로 넘긴다. */
-    fun setUserDataWithPack(
-        userId: Int,
-        userLocationId: Int,
-        onSuccess: () -> Unit,
-        onError: (String) -> Unit,
-    ) = viewModelScope.launch {
-        selectedPoca.value?.let { poca ->
-            arpocaRepository.setUserDataWithPack(
-                packId = poca.pack_id,
-                userId = userId,
-                pocaId = poca.id,
-                locationId = userLocationId,
-            ).collectLatest { result ->
-                result.handleResponse(
-                    onError = onError,
-                    emptyMsg = "카드를 획득할 수 없어요."
-                ) { res ->
-                    when (res.response_code) {
-                        ERROR_ALREAY_GET_CARDED -> {
-                            onError("이미 획득한 카드예요!")
-                        }
-                        ONSUCCESS -> {
-                            /* 선택된 포카의 location_id만 가져온다. */
-                            _selectedPoca.value =
-                                _selectedPoca.value?.copy(
-                                    location_id = res.poca_info.location_id.toInt(),
-                                    register_time = res.poca_info.register_time
-                                )
-                            onSuccess()
-                        }
-                        else -> {
-                            onError("카드를 획득할 수 없어요.")
-                        }
-                    }
-                }
-            }
-        }
-    }
+//    fun setUserDataWithPack(
+//        userId: Int,
+//        userLocationId: Int,
+//        onSuccess: () -> Unit,
+//        onError: (String) -> Unit,
+//    ) = viewModelScope.launch {
+//        selectedPoca.value?.let { poca ->
+//            arpocaRepository.setUserDataWithPack(
+//                packId = poca.pack_id,
+//                userId = userId,
+//                pocaId = poca.id,
+//                locationId = userLocationId,
+//            ).collectLatest { result ->
+//                result.handleResponse(
+//                    onError = onError,
+//                    emptyMsg = "카드를 획득할 수 없어요."
+//                ) { res ->
+//                    when (res.response_code) {
+//                        ERROR_ALREAY_GET_CARDED -> {
+//                            onError("이미 획득한 카드예요!")
+//                        }
+//                        ONSUCCESS -> {
+//                            /* 선택된 포카의 location_id만 가져온다. */
+//                            _selectedPoca.value =
+//                                _selectedPoca.value?.copy(
+//                                    location_id = res.poca_info.location_id.toInt(),
+//                                    register_time = res.poca_info.register_time
+//                                )
+//                            onSuccess()
+//                        }
+//                        else -> {
+//                            onError("카드를 획득할 수 없어요.")
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     private suspend fun deCodeUrlToAnimationDrawable(
         context: Context,
@@ -271,17 +214,18 @@ class ArpocaViewModel : ViewModel() {
         userId: Int,
     ) = viewModelScope.launch {
         val drawable: Deferred<AnimationDrawable?> = async {
-            deCodeUrlToAnimationDrawable(context, URL(packInfo.value?.pack_getmotion_img))
+            deCodeUrlToAnimationDrawable(context, URL(packInfo.value?.getMotionImg))
         }
         viewModelScope.launch(Dispatchers.Main) {
             onDrawableReady(drawable.await())
         }
         when (arPlayerType) {
             ArPlayerType.CHECKIN -> {
-                getTotalCheckInData(totId = totId, userId = userId, onError = onError)
+//                getTotalCheckInData(totId = totId, userId = userId, onError = onError)
             }
             ArPlayerType.POCA -> {
-                getTotalDataWithPack(packId = packId, onError = onError)
+//                getTotalDataWithPack(packId = packId, onError = onError
+                //                )
             }
         }
     }
@@ -293,16 +237,12 @@ class ArpocaViewModel : ViewModel() {
         if (!isRotating) {
             isRotating = true
             val drawable = async {
-                deCodeUrlToAnimationDrawable(context, URL(packInfo.value?.pack_cardmotion_img))
+                deCodeUrlToAnimationDrawable(context, URL(packInfo.value?.cardMotionImg))
             }
             viewModelScope.launch(Dispatchers.Main) {
                 onDrawableReady(drawable.await())
             }
         }
-    }
-
-    fun updatePack(packId: Int) {
-        _packInfo.value = packList.find { it.id == packId } ?: return
     }
 
     companion object {

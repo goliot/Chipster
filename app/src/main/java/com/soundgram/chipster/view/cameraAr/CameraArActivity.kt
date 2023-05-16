@@ -18,7 +18,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.drawToBitmap
+import androidx.lifecycle.ViewModelProvider
 import com.soundgram.chipster.databinding.ActivityCameraArBinding
+import com.soundgram.chipster.view.ar.ArpocaViewModel
 import java.text.SimpleDateFormat
 
 class CameraArActivity : AppCompatActivity() {

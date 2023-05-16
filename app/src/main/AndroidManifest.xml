@@ -82,11 +82,19 @@
 
         <activity
             android:name=".view.qr.QrActivity"
-            android:theme="@style/FullScreenTheme" />
+            android:theme="@style/FullScreenTheme"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
 
         <activity
             android:name=".view.qr.QrResultActivity"
-            android:theme="@style/FullScreenTheme" />
+            android:theme="@style/FullScreenTheme"></activity>
 
         <activity
             android:name=".view.cameraAr.CameraArActivity"
@@ -99,11 +107,7 @@
             android:name=".view.ar.ArActivity"
             android:theme="@style/FullScreenTheme"
             android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
         </activity>
     </application>
 
