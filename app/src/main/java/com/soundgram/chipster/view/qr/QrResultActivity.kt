@@ -18,9 +18,11 @@ class QrResultActivity : AppCompatActivity() {
         viewModel = ViewModelProvider(this)[QrViewModel::class.java]
         setContentView(binding.root)
 
-        binding.resultTv.text = "스캔결과 : ${intent.getStringExtra(ScanOptions.QR_CODE)}"
-        viewModel.getPocaInfo(intent.getIntExtra(ScanOptions.QR_CODE, 307)) {
-            Toast.makeText(this, "포카 정보: $it", Toast.LENGTH_SHORT).show()
+        val pocaId = intent.getStringExtra(ScanOptions.QR_CODE)?.toIntOrNull() ?: 307
+        val userId = intent.getStringExtra(ScanOptions.QR_CODE)?.toIntOrNull() ?: 1114
+        binding.resultTv.text = "스캔결과 : $pocaId"
+        viewModel.getPocaInfo(pocaId, userId) {
+            Toast.makeText(this, "포카 다운로드 완료!", Toast.LENGTH_SHORT).show()
         }
         val finishClickListener = View.OnClickListener { finish() }
         binding.startBt.setOnClickListener(finishClickListener)

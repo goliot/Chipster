@@ -65,8 +65,8 @@ class LoginActivity : AppCompatActivity() {
         setContentView(binding.root)
         prefs = getSharedPreferences("Pref", MODE_PRIVATE)
 
-//        LOGIN_URL = ChipsterApplication.MAIN_URL + "/login.php"
-        LOGIN_URL = ChipsterApplication.MAIN_URL + "/home_rhw.php"
+        LOGIN_URL = ChipsterApplication.MAIN_URL + "/login.php"
+//        LOGIN_URL = ChipsterApplication.MAIN_URL + "/home_rhw.php"
 
         permissionCheck(
             context = this@LoginActivity,
@@ -376,6 +376,12 @@ class LoginActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun _MoveQR() {
+            startActivity(Intent(this@LoginActivity, QrActivity::class.java))
+        }
+
+        @JavascriptInterface
+        fun _MoveQR(userId: String) {
+            Log.i("dlgocks1", userId)
             startActivity(Intent(this@LoginActivity, QrActivity::class.java))
         }
 

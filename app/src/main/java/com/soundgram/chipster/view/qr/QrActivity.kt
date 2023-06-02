@@ -14,6 +14,8 @@ import com.journeyapps.barcodescanner.BarcodeResult
 import com.journeyapps.barcodescanner.CaptureManager
 import com.journeyapps.barcodescanner.ScanOptions
 import com.soundgram.chipster.databinding.ActivityQrBinding
+import com.soundgram.chipster.network.Constants.PACK_ID
+import com.soundgram.chipster.network.Constants.USER_ID
 import com.soundgram.chipster.util.Constants.CAMERA_PERMISSION_REQUEST_CODE
 
 class QrActivity : AppCompatActivity() {
@@ -48,9 +50,11 @@ class QrActivity : AppCompatActivity() {
     // QR 코드 스캔 결과 처리
     private val callback = object : BarcodeCallback {
         override fun barcodeResult(result: BarcodeResult?) {
-            startActivity(Intent(this@QrActivity, QrResultActivity::class.java).apply {
-                putExtra(ScanOptions.QR_CODE, result.toString())
-            })
+            val intent = Intent(this@QrActivity, QrResultActivity::class.java).apply {
+                putExtra(PACK_ID, result.toString())
+                putExtra(USER_ID, result.toString())
+            }
+            startActivity(intent)
             finish()
         }
 
