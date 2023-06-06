@@ -13,6 +13,7 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.bumptech.glide.Glide
+import com.soundgram.chipster.R
 import com.soundgram.chipster.util.Constants.PERMISSION_REQUEST_CODE
 import kotlin.collections.ArrayList
 import kotlin.math.acos
@@ -56,7 +57,7 @@ fun ImageView.setImageWithUrl(
     context: Context,
     url: String?,
     @DrawableRes placeHolder: Int = -1,
-    @DrawableRes errorImg: Int = -1,
+    @DrawableRes errorImg: Int = R.drawable.bottom_05,
     thumbnail: Float = 0.3f
 ) = this.apply {
     Glide.with(context)

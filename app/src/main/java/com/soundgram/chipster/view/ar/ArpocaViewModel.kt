@@ -15,6 +15,7 @@ import com.soundgram.chipster.domain.model.PackInfo
 import com.soundgram.chipster.domain.model.Poca
 import com.soundgram.chipster.domain.model.ArPlayerType
 import com.soundgram.chipster.network.RestfulAdapter.chipsterService
+import com.soundgram.chipster.util.Constants.IMAGE_PATH
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -214,7 +215,10 @@ class ArpocaViewModel : ViewModel() {
         userId: Int,
     ) = viewModelScope.launch {
         val drawable: Deferred<AnimationDrawable?> = async {
-            deCodeUrlToAnimationDrawable(context, URL(packInfo.value?.getMotionImg))
+            deCodeUrlToAnimationDrawable(
+                context,
+                URL(IMAGE_PATH.format(packId, packInfo.value?.getMotionImg))
+            )
         }
         viewModelScope.launch(Dispatchers.Main) {
             onDrawableReady(drawable.await())
@@ -224,8 +228,7 @@ class ArpocaViewModel : ViewModel() {
 //                getTotalCheckInData(totId = totId, userId = userId, onError = onError)
             }
             ArPlayerType.POCA -> {
-//                getTotalDataWithPack(packId = packId, onError = onError
-                //                )
+//                getTotalDataWithPack(packId = packId, onError = onError)
             }
         }
     }
@@ -237,7 +240,10 @@ class ArpocaViewModel : ViewModel() {
         if (!isRotating) {
             isRotating = true
             val drawable = async {
-                deCodeUrlToAnimationDrawable(context, URL(packInfo.value?.cardMotionImg))
+                deCodeUrlToAnimationDrawable(
+                    context,
+                    URL(IMAGE_PATH.format(packInfo.value?.packId, packInfo.value?.cardMotionImg))
+                )
             }
             viewModelScope.launch(Dispatchers.Main) {
                 onDrawableReady(drawable.await())

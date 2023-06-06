@@ -10,7 +10,7 @@ import retrofit2.http.GET
 import retrofit2.http.Path
 
 interface ChipsterService {
-    @GET("v1/arpocas-with-packInfo/{packId}")
+    @GET("v1/arpocasWithPackInfo/{packId}")
     suspend fun getPocasWithPackID(@Path("packId") packId: Int): Response<GetPocasResponse>
 
     @GET("v1/arpoca/pack/{packId}")

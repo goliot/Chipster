@@ -7,10 +7,8 @@ import android.os.Looper
 import android.util.Log
 import android.view.Gravity
 import android.widget.Toast
-import com.google.ar.core.ArCoreApk
+import com.google.ar.core.*
 import com.google.ar.core.ArCoreApk.InstallStatus
-import com.google.ar.core.Config
-import com.google.ar.core.Session
 import com.google.ar.core.exceptions.*
 import uk.co.appoly.arcorelocation.utils.ARLocationPermissionHelper
 
@@ -83,6 +81,15 @@ object DemoUtils {
             // IMPORTANT!!!  ArSceneView needs to use the non-blocking update mode.
             val config = Config(session)
             config.updateMode = Config.UpdateMode.LATEST_CAMERA_IMAGE
+            val cameraConfigFilter = CameraConfigFilter(session)
+            cameraConfigFilter.facingDirection = CameraConfig.FacingDirection.BACK
+            val cameraConfigs =
+                session.getSupportedCameraConfigs(cameraConfigFilter)
+            if (cameraConfigs.isNotEmpty()) {
+                session.setCameraTextureName(0)
+                session.cameraConfig = cameraConfigs[0]
+            }
+            config.focusMode = Config.FocusMode.AUTO
             session.configure(config)
         }
         return session

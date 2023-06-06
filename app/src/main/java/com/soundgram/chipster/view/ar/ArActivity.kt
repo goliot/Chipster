@@ -6,8 +6,12 @@ import android.app.Activity
 import android.content.Context
 import android.content.Intent
 import android.graphics.*
+import android.hardware.display.DisplayManager
+import android.hardware.display.VirtualDisplay
 import android.media.Image
 import android.media.ImageReader
+import android.media.ImageReader.OnImageAvailableListener
+import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
 import android.net.Uri
 import android.os.Build.VERSION_CODES
@@ -24,26 +28,29 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
-import com.google.ar.core.Session
-import com.google.ar.core.TrackingState
+import com.google.ar.core.*
 import com.google.ar.core.exceptions.CameraNotAvailableException
 import com.google.ar.core.exceptions.UnavailableException
 import com.google.ar.sceneform.ArSceneView
 import com.google.ar.sceneform.Node
-import com.google.ar.sceneform.math.Quaternion
 import com.google.ar.sceneform.math.Vector3
 import com.google.ar.sceneform.rendering.FixedWidthViewSizer
+import com.google.ar.sceneform.rendering.MaterialFactory
+import com.google.ar.sceneform.rendering.ShapeFactory
 import com.google.ar.sceneform.rendering.ViewRenderable
 import com.google.zxing.integration.android.IntentIntegrator.REQUEST_CODE
 import com.soundgram.chipster.R
 import com.soundgram.chipster.databinding.ActivityArBinding
-import com.soundgram.chipster.util.*
 import com.soundgram.chipster.domain.model.ArPlayerType
 import com.soundgram.chipster.domain.model.Poca
+import com.soundgram.chipster.service.MediaProjectionAccessService
+import com.soundgram.chipster.util.*
+import com.soundgram.chipster.util.Constants.IMAGE_PATH
 import kotlinx.coroutines.*
 import uk.co.appoly.arcorelocation.LocationMarker
 import uk.co.appoly.arcorelocation.LocationScene
 import uk.co.appoly.arcorelocation.utils.ARLocationPermissionHelper
+import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
@@ -66,19 +73,24 @@ class ArActivity : AppCompatActivity() {
     private lateinit var arLayoutRenderable: ViewRenderable
     private lateinit var gpsTracker: GpsTracker
     private lateinit var viewModel: ArpocaViewModel
-
+    lateinit var mediaProjectionManager: MediaProjectionManager
+    private lateinit var mediaProjection: MediaProjection
+    private lateinit var mediaprojectionIntent: Intent
     private val showToastMessage: (String) -> Unit = {
         Toast.makeText(this@ArActivity, it, Toast.LENGTH_SHORT).show()
     }
 
-    lateinit var mediaProjectionManager: MediaProjectionManager
 
-    @RequiresApi(VERSION_CODES.N)
+    @RequiresApi(VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        mediaprojectionIntent = Intent(this, MediaProjectionAccessService::class.java)
         ARLocationPermissionHelper.requestPermission(this)
         mediaProjectionManager =
             getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
+        startForegroundService(mediaprojectionIntent)
+        val projectionIntent = mediaProjectionManager.createScreenCaptureIntent()
+        startActivityForResult(projectionIntent, REQUEST_CODE)
 
         init()
         setContentView(binding.root)
@@ -96,7 +108,6 @@ class ArActivity : AppCompatActivity() {
         } else {
             ArPlayerType.POCA
         }
-
         _binding = ActivityArBinding.inflate(layoutInflater)
         viewModel = ViewModelProvider(this)[ArpocaViewModel::class.java]
         binding.arSceneView.planeRenderer.isVisible = false
@@ -122,7 +133,7 @@ class ArActivity : AppCompatActivity() {
             binding.apply {
                 detailCircleIv.setImageWithUrl(
                     this@ArActivity,
-                    url = viewModel.packInfo.value?.targetImg,
+                    url = IMAGE_PATH.format(packId, viewModel.packInfo.value?.targetImg),
                 )
                 photoContentIv.setImageWithUrl(
                     this@ArActivity,
@@ -161,8 +172,8 @@ class ArActivity : AppCompatActivity() {
         viewModel.packInfo.observe(this) {
             arLayout.thenAccept { viewRenderable ->
                 Glide.with(this)
-                    .load(viewModel.packInfo.value?.targetImg)
-                    .error(R.drawable.ic_map)
+                    .load(IMAGE_PATH.format(packId, viewModel.packInfo.value?.targetImg))
+                    .error(R.drawable.bottom_04)
                     .into(viewRenderable.view.findViewById(R.id.ar_target_iv))
                 viewRenderable.sizer = FixedWidthViewSizer(0.2f)
             }
@@ -174,7 +185,6 @@ class ArActivity : AppCompatActivity() {
 
     }
 
-
     /** ARview를 생성한다. */
     @RequiresApi(VERSION_CODES.N)
     private fun setArView() {
@@ -182,25 +192,38 @@ class ArActivity : AppCompatActivity() {
         arLayout = ViewRenderable.builder()
             .setView(this, R.layout.ar_target_layout)
             .build()
-
-        // 신이 업데이트되면 계속 진행됨
-        arSceneView.scene.addOnUpdateListener {
-            if (!viewModel.hasFinishedLoading) {
-                return@addOnUpdateListener
-            }
-            if (locationScene == null) {
-                locationScene = LocationScene(this, this, arSceneView)
-                locationScene?.distanceLimit = 1
-                locationScene?.anchorRefreshInterval = Int.MAX_VALUE
-                observePoca()
-            }
-            val frame = arSceneView.arFrame ?: return@addOnUpdateListener
-            if (frame.camera.trackingState != TrackingState.TRACKING) {
-                return@addOnUpdateListener
-            }
-            locationScene?.processFrame(frame)
-        }
         completeArLayout()
+
+        MaterialFactory.makeOpaqueWithColor(this, com.google.ar.sceneform.rendering.Color(0x000000))
+            .thenAccept { material ->
+//                val node = Node()
+//                node.setParent(binding.arSceneView.scene)
+//                node.renderable =
+//                    ShapeFactory.makeSphere(0.1f, Vector3(0.0f, 0.15f, 0.0f), material)
+                arSceneView.scene.addOnUpdateListener {
+                    if (!viewModel.hasFinishedLoading) {
+                        return@addOnUpdateListener
+                    }
+                    if (locationScene == null) {
+                        locationScene = LocationScene(this, this, arSceneView)
+                        locationScene?.distanceLimit = 1
+                        locationScene?.anchorRefreshInterval = Int.MAX_VALUE
+                        observePoca()
+                    }
+                    val frame = arSceneView.arFrame ?: return@addOnUpdateListener
+                    if (frame.camera.trackingState != TrackingState.TRACKING) {
+                        return@addOnUpdateListener
+                    }
+
+                    val camera = binding.arSceneView.scene.camera
+                    val ray = camera.screenPointToRay(1080 / 2f, 1920 / 2f)
+                    val newPosition = ray.getPoint(1f)
+//                    node.localPosition = newPosition
+
+                    locationScene?.processFrame(frame)
+                }
+            }
+        // 신이 업데이트되면 계속 진행됨
     }
 
 //    private fun testMarkers() {
@@ -300,16 +323,17 @@ class ArActivity : AppCompatActivity() {
                     getArView(it)
                 ).apply {
                     setScaleAtDistance(false)
-                    height = 0f
+//                    height = 0f
                     this.node.apply {
-                        val lookRotation =
-                            Quaternion.lookRotation(Vector3.zero(), Vector3.zero())
-                        worldRotation = lookRotation
-                        worldPosition = Vector3.one()
-                        worldScale = Vector3.one()
-                        setRenderEvent {
-                            worldScale = Vector3.one()
-                        }
+
+//                        val lookRotation =
+//                            Quaternion.lookRotation(Vector3.zero(), Vector3.zero())
+//                        worldRotation = lookRotation
+//                        worldPosition = Vector3.one()
+//                        worldScale = Vector3.one()
+//                        setRenderEvent {
+//                            worldScale = Vector3.one()
+//                        }
                     }
                 }
                 locationScene?.mLocationMarkers?.add(locationMarker)
@@ -437,47 +461,84 @@ class ArActivity : AppCompatActivity() {
                 onFinish(MOVE_BINDER)
             }
 
-//            binding.confirmBt.setOnClickListener {
-//                val captureIntent = mediaProjectionManager.createScreenCaptureIntent()
-//                startActivityForResult(captureIntent, REQUEST_CODE)
-//            }
-        }
-    }
-
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_CODE) {
-            if (resultCode == Activity.RESULT_OK) {
-                val mediaProjection =
-                    mediaProjectionManager.getMediaProjection(resultCode, data!!)
+            binding.confirmBt.setOnClickListener {
+                if (!::mediaProjection.isInitialized) return@setOnClickListener
+                val metrics = resources.displayMetrics
                 val imageReader = ImageReader.newInstance(
-                    binding.arSceneView.width,
-                    binding.arSceneView.height,
+                    binding.arLayout.width,
+                    binding.arLayout.height,
                     PixelFormat.RGBA_8888,
                     1
                 )
-
-                // 이미지 처리
-                handleCaptureImage(imageReader.acquireLatestImage())
-
-                mediaProjection.stop()
+                val virtualDisplay = mediaProjection.createVirtualDisplay(
+                    "VirtualDisplay",
+                    binding.arLayout.width,
+                    binding.arLayout.height,
+                    metrics.densityDpi,
+                    DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                    imageReader.surface,
+                    VirtualDisplayCallback(),
+                    null
+                )
+                val imageAvailableListener =
+                    OnImageAvailableListener { reader ->
+                        val image = reader.acquireLatestImage()
+                        if (image != null) {
+                            handleCaptureImage(image)
+                            imageReader.setOnImageAvailableListener(null, null)
+                            virtualDisplay.release()
+                            image.close()
+                        }
+                    }
+                imageReader.setOnImageAvailableListener(imageAvailableListener, null)
             }
         }
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CODE && resultCode == Activity.RESULT_OK) {
+            mediaProjection = mediaProjectionManager.getMediaProjection(resultCode, data!!)
+        }
+    }
+
+    inner class VirtualDisplayCallback : VirtualDisplay.Callback() {
+        override fun onPaused() {
+            super.onPaused()
+            Log.e("dlgocks1", "VirtualDisplayCallback: onPaused")
+        }
+
+        override fun onResumed() {
+            super.onResumed()
+            Log.e("dlgocks1", "VirtualDisplayCallback: onResumed")
+        }
+
+        override fun onStopped() {
+            super.onStopped()
+            Log.e("dlgocks1", "VirtualDisplayCallback: onStopped")
+        }
+
+    }
+
     private fun handleCaptureImage(image: Image?) {
+        if (image == null) Log.i("dlgocks1", "image가 널임")
         if (image != null) {
-            val buffer = image.planes[0].buffer
-            val pixels = IntArray(buffer.remaining() / 4)
-            buffer.asIntBuffer().get(pixels)
+
+            val planes = image.planes
+            val buffer: ByteBuffer = planes[0].buffer
+            val pixelStride = planes[0].pixelStride
+            val rowStride = planes[0].rowStride
+            val rowPadding = rowStride - pixelStride * image.width
+            val width = image.width
+            val height = image.height
             val bitmap = Bitmap.createBitmap(
-                image.width,
-                image.height,
+                width + rowPadding / pixelStride,
+                height,
                 Bitmap.Config.ARGB_8888
             )
-            bitmap.setPixels(pixels, 0, image.width, 0, 0, image.width, image.height)
-
+            bitmap.copyPixelsFromBuffer(buffer)
+            image.close()
+            Bitmap.createBitmap(bitmap, 0, 0, width, height)
             // 이미지 저장
             getImageUri(this@ArActivity, bitmap)
         }
@@ -514,31 +575,30 @@ class ArActivity : AppCompatActivity() {
 //                        setLoadingFalse()
 //                    },
 //                    onSuccess = {
-//                        onPocaClick(
-//                            context = this@ArActivity,
-//                            packId = packId,
-//                            userId = userId,
-//                            totId = totId,
-//                            arPlayerType = arPlayerType,
-//                            onDrawableReady = { animatedDrawable ->
-//                                binding.getMotionIv.setImageDrawable(animatedDrawable)
-//                                animatedDrawable?.start()
-//                                onTouchMarker()
-//                                Handler(Looper.getMainLooper()).postDelayed({
-//                                    binding.getMotionEndedIv.setImageWithUrl(
-//                                        this@ArActivity,
-//                                        url = packInfo.value?.cardImg
-//                                    )
-//                                    binding.getMotionEndedIv.show()
-//                                    binding.getMotionTv.text = "카드를 위아래로 휘리릭 돌려 보라구~!"
-//                                    binding.getMotionIv.setImageResource(0)
-//                                }, 3200)
-//                            },
-//                            onError = { errormsg ->
-//                                showToastMessage(errormsg)
-//                            }
-//                        )
-//                    })
+                onPocaClick(
+                    context = this@ArActivity,
+                    packId = packId,
+                    userId = userId,
+                    totId = totId,
+                    arPlayerType = arPlayerType,
+                    onDrawableReady = { animatedDrawable ->
+                        binding.getMotionIv.setImageDrawable(animatedDrawable)
+                        animatedDrawable?.start()
+                        onTouchMarker()
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            binding.getMotionEndedIv.setImageWithUrl(
+                                this@ArActivity,
+                                url = IMAGE_PATH.format(packId, packInfo.value?.cardImg)
+                            )
+                            binding.getMotionEndedIv.show()
+                            binding.getMotionTv.text = "카드를 위아래로 휘리릭 돌려 보라구~!"
+                            binding.getMotionIv.setImageResource(0)
+                        }, 3200)
+                    },
+                    onError = { errormsg ->
+                        showToastMessage(errormsg)
+                    }
+                )
             }
             false
         }
@@ -685,6 +745,13 @@ class ArActivity : AppCompatActivity() {
 //        if (arSceneView?.session != null) {
 //            showLoadingMessage()
 //        }
+        val cameraConfigFilter = CameraConfigFilter(arSceneView.session)
+        cameraConfigFilter.facingDirection = CameraConfig.FacingDirection.FRONT
+        val cameraConfigs =
+            arSceneView.session?.getSupportedCameraConfigs(cameraConfigFilter)
+        if (cameraConfigs?.isNotEmpty() == true) {
+            arSceneView.session?.cameraConfig = cameraConfigs[0]!!
+        }
         gpsTracker = GpsTracker(this)
         viewModel.userLat = gpsTracker.userlatitude
         viewModel.userLong = gpsTracker.userlongitude
@@ -699,6 +766,10 @@ class ArActivity : AppCompatActivity() {
     public override fun onDestroy() {
         super.onDestroy()
         showSystemUI(window, binding.root)
+        stopService(mediaprojectionIntent)
+        if (::mediaProjection.isInitialized) {
+            mediaProjection.stop()
+        }
         arSceneView.destroy()
         _binding = null
     }

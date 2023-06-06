@@ -11,4 +11,7 @@ object Constants {
 
     const val IMAGE_URI = "imageURI"
 
+    // IMAGE_PATH.format(팩아이디, 이미지이름) 으로 입력할 것
+    const val IMAGE_PATH =
+        "https://chipsterplay.soundgram.co.kr/media/arpoca/%d/pack_img/%s"
 }
