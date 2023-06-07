@@ -18,7 +18,7 @@ interface ChipsterService {
     @GET("v1/arpoca/pack/{packId}")
     suspend fun getPackInfo(@Path("packId") packId: Int): Response<PackInfo>
 
-    @GET("v1/arpoca/userPack")
+    @POST("v1/arpoca/userPack")
     suspend fun postUserPackResponse(
         @Body postUserPackRequest: PostUserPackRequest
     ): Response<DefaultResponse>

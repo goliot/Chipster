@@ -34,6 +34,7 @@ import com.soundgram.chipster.util.Constants.ERROR
 import com.soundgram.chipster.util.Constants.GALLERY_REQUEST_CODE
 import com.soundgram.chipster.util.Constants.IMAGE_URI
 import com.soundgram.chipster.util.Constants.PERMISSION_REQUEST_CODE
+import com.soundgram.chipster.util.Constants.USER_ID
 import com.soundgram.chipster.util.baseWebViewSetting
 import com.soundgram.chipster.util.permissionCheck
 import com.soundgram.chipster.util.userid.Installation
@@ -381,8 +382,10 @@ class LoginActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun _MoveQR(userId: String) {
+            val intent = Intent(this@LoginActivity, QrActivity::class.java)
+            intent.putExtra(USER_ID, userId)
             Log.i("dlgocks1", userId)
-            startActivity(Intent(this@LoginActivity, QrActivity::class.java))
+            startActivity(intent)
         }
 
         @JavascriptInterface

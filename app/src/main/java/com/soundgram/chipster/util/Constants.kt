@@ -10,6 +10,11 @@ object Constants {
     const val CROP_REQUEST_CODE = 2003
 
     const val IMAGE_URI = "imageURI"
+    const val PACK_ID = "packId"
+    const val USER_ID = "userId"
+
+    const val DEFAULT_USER_ID = 1025
+    const val DEFEAULT_PACK_ID = 307
 
     // IMAGE_PATH.format(팩아이디, 이미지이름) 으로 입력할 것
     const val IMAGE_PATH =

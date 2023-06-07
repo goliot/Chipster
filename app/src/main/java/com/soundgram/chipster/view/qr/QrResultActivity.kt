@@ -1,12 +1,19 @@
 package com.soundgram.chipster.view.qr
 
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
-import com.journeyapps.barcodescanner.ScanOptions
+import com.soundgram.chipster.R
 import com.soundgram.chipster.databinding.ActivityQrResultBinding
+import com.soundgram.chipster.util.Constants.DEFAULT_USER_ID
+import com.soundgram.chipster.util.Constants.DEFEAULT_PACK_ID
+import com.soundgram.chipster.util.Constants.PACK_ID
+import com.soundgram.chipster.util.Constants.USER_ID
+import com.soundgram.chipster.util.hide
+import com.soundgram.chipster.util.show
 
 class QrResultActivity : AppCompatActivity() {
     private lateinit var binding: ActivityQrResultBinding
@@ -18,14 +25,37 @@ class QrResultActivity : AppCompatActivity() {
         viewModel = ViewModelProvider(this)[QrViewModel::class.java]
         setContentView(binding.root)
 
-        val pocaId = intent.getStringExtra(ScanOptions.QR_CODE)?.toIntOrNull() ?: 307
-        val userId = intent.getStringExtra(ScanOptions.QR_CODE)?.toIntOrNull() ?: 1114
-        binding.resultTv.text = "스캔결과 : $pocaId"
-        viewModel.getPocaInfo(pocaId, userId) {
-            Toast.makeText(this, "포카 다운로드 완료!", Toast.LENGTH_SHORT).show()
-        }
+        val packId = intent.getStringExtra(PACK_ID)?.toIntOrNull() ?: DEFEAULT_PACK_ID
+        val userId = intent.getStringExtra(USER_ID)?.toIntOrNull() ?: DEFAULT_USER_ID
+        initView()
+
+        viewModel.postUserPack(
+            packId = packId,
+            userId = userId,
+            onSuccess = {
+                Toast.makeText(this, "포카 다운로드 완료!", Toast.LENGTH_SHORT).show()
+                binding.resultIv.setImageResource(R.mipmap.img_qr_result_ok)
+                binding.titleTv.text = "인증이 완료되었습니다."
+                binding.subtitleTv.text = "이제 마음껏 즐겨보세요!"
+                binding.startBt.show()
+                binding.backIv.hide()
+            },
+            onError = {
+                Toast.makeText(this, "포카 다운로드 중 에러가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                binding.resultIv.setImageResource(R.mipmap.img_qr_result_fail)
+                binding.titleTv.text = "인증에 실패했습니다."
+                binding.subtitleTv.text = "다시 시도해 주세요."
+                binding.startBt.hide()
+                binding.backIv.show()
+            }
+        )
+
+    }
+
+    private fun initView() {
         val finishClickListener = View.OnClickListener { finish() }
         binding.startBt.setOnClickListener(finishClickListener)
+        binding.backIv.setOnClickListener(finishClickListener)
         binding.closeIv.setOnClickListener(finishClickListener)
     }
 }
