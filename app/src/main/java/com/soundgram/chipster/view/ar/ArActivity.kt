@@ -34,6 +34,8 @@ import com.soundgram.chipster.databinding.ActivityArBinding
 import com.soundgram.chipster.domain.model.ArPocaDistanceType
 import com.soundgram.chipster.domain.model.Poca
 import com.soundgram.chipster.util.*
+import com.soundgram.chipster.util.Constants.DEFAULT_USER_ID
+import com.soundgram.chipster.util.Constants.DEFEAULT_PACK_ID
 import com.soundgram.chipster.util.Constants.IMAGE_PATH
 import com.soundgram.chipster.view.ar.ArpocaViewModel.Companion.POCATEXT_LOADING
 import kotlinx.coroutines.*
@@ -77,8 +79,8 @@ class ArActivity : AppCompatActivity() {
     }
 
     private fun init() {
-        packId = intent.getIntExtra("packId", 307) // 테스트용 307
-        userId = intent.getIntExtra("userId", 1025) // 1025
+        packId = intent.getIntExtra("packId", DEFEAULT_PACK_ID) // 테스트용 307
+        userId = intent.getIntExtra("userId", DEFAULT_USER_ID) // 1025
         _binding = ActivityArBinding.inflate(layoutInflater)
         viewModel = ViewModelProvider(this)[ArpocaViewModel::class.java]
         binding.arSceneView.planeRenderer.isVisible = false
@@ -93,7 +95,8 @@ class ArActivity : AppCompatActivity() {
         viewModel.packInfo.observe(this) {
             arLayout.thenAccept { viewRenderable ->
                 Glide.with(this)
-                    .load(IMAGE_PATH.format(packId, viewModel.packInfo.value?.targetImg))
+//                    .load(IMAGE_PATH.format(packId, viewModel.packInfo.value?.targetImg))
+                    .load("https://chipsterplay.soundgram.co.kr/media/arpoca/307/pack_img/target_img_1.png")
                     .error(R.drawable.bottom_04)
                     .into(viewRenderable.view.findViewById(R.id.ar_target_iv))
                 viewRenderable.sizer = FixedWidthViewSizer(0.2f)
@@ -276,7 +279,6 @@ class ArActivity : AppCompatActivity() {
                     onSuccess = {
                         onPocaClick(
                             context = this@ArActivity,
-                            packId = packId,
                             onDrawableReady = { animatedDrawable ->
                                 binding.getMotionIv.setImageDrawable(animatedDrawable)
                                 animatedDrawable?.start()
@@ -284,7 +286,8 @@ class ArActivity : AppCompatActivity() {
                                 Handler(Looper.getMainLooper()).postDelayed({
                                     binding.getMotionEndedIv.setImageWithUrl(
                                         this@ArActivity,
-                                        url = IMAGE_PATH.format(packId, packInfo.value?.cardImg)
+//                                        url = IMAGE_PATH.format(packId, packInfo.value?.cardImg)
+                                        url = "https://chipsterplay.soundgram.co.kr/media/arpoca/307/pack_img/pack_img_1.png"
                                     )
                                     binding.getMotionEndedIv.show()
                                     binding.getMotionTv.text = "카드를 위아래로 휘리릭 돌려 보라구~!"
@@ -306,7 +309,7 @@ class ArActivity : AppCompatActivity() {
             getMotionIv.show()
             getMotionTv.show()
             getMotionTv.text = "잡았다!! 요놈!!"
-            getPocaIv.setBackgroundResource(R.drawable.bottom_05)
+//            getPocaIv.setBackgroundResource(R.drawable.bottom_05)
         }
     }
 

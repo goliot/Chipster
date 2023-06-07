@@ -115,13 +115,13 @@ class ArpocaViewModel : ViewModel() {
 
     fun onPocaClick(
         context: Context,
-        packId: Int,
         onDrawableReady: (AnimationDrawable?) -> Unit,
     ) = viewModelScope.launch {
         val drawable: Deferred<AnimationDrawable?> = async {
             deCodeUrlToAnimationDrawable(
                 context,
-                URL(IMAGE_PATH.format(packId, packInfo.value?.getMotionImg))
+//                URL(IMAGE_PATH.format(packId, packInfo.value?.getMotionImg))
+                URL("https://chipsterplay.soundgram.co.kr/media/arpoca/307/pack_img/getmotion_img_1.png")
             )
         }
         viewModelScope.launch(Dispatchers.Main) {
@@ -138,7 +138,8 @@ class ArpocaViewModel : ViewModel() {
             val drawable = async {
                 deCodeUrlToAnimationDrawable(
                     context,
-                    URL(IMAGE_PATH.format(packInfo.value?.packId, packInfo.value?.cardMotionImg))
+//                    URL(IMAGE_PATH.format(packInfo.value?.packId, packInfo.value?.cardMotionImg))
+                    URL("https://chipsterplay.soundgram.co.kr/media/arpoca/307/pack_img/cardmotion_img_1.png")
                 )
             }
             viewModelScope.launch(Dispatchers.Main) {
