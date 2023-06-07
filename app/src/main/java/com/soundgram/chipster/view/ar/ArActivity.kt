@@ -309,7 +309,10 @@ class ArActivity : AppCompatActivity() {
             getMotionIv.show()
             getMotionTv.show()
             getMotionTv.text = "잡았다!! 요놈!!"
-//            getPocaIv.setBackgroundResource(R.drawable.bottom_05)
+
+            val resourceLoader = ResourceStreamLoader(this@ArActivity, R.drawable.img_distance_05)
+            val apngDrawable = APNGDrawable(resourceLoader)
+            binding.getPocaIv.setImageDrawable(apngDrawable)
         }
     }
 

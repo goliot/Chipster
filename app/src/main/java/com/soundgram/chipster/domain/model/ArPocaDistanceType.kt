@@ -14,10 +14,10 @@ enum class ArPocaDistanceType(
     val distance: Int // Meter
 ) {
 
-    POCA_1KM(POCATEXT_1KM, R.drawable.img_distance_05, 1_000),
-    POCA_500M(POCATEXT_500M, R.drawable.img_distance_04, 500),
+    POCA_1KM(POCATEXT_1KM, R.drawable.img_distance_01, 1_000),
+    POCA_500M(POCATEXT_500M, R.drawable.img_distance_02, 500),
     POCA_200M(POCATEXT_200M, R.drawable.img_distance_03, 200),
-    POCA_100M(POCATEXT_100M, R.drawable.img_distance_02, 100);
+    POCA_100M(POCATEXT_100M, R.drawable.img_distance_04, 100);
 
 
     companion object {
