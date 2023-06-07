@@ -1,6 +1,7 @@
 package com.soundgram.chipster.domain.model
 
 data class Poca(
+    val id: Int,
     val address: String,
     val content: String,
     val img: String,

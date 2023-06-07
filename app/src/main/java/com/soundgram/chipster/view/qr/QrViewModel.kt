@@ -2,10 +2,9 @@ package com.soundgram.chipster.view.qr
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.soundgram.chipster.domain.model.PackInfo
 import com.soundgram.chipster.domain.repository.QrRepository
 import com.soundgram.chipster.network.RestfulAdapter
-import com.soundgram.chipster.network.response.PostUserPackResponse
+import com.soundgram.chipster.network.request.PostUserPackRequest
 import kotlinx.coroutines.launch
 
 class QrViewModel : ViewModel() {
@@ -17,7 +16,7 @@ class QrViewModel : ViewModel() {
     fun getPocaInfo(userId: Int, packId: Int, onSuccess: () -> Unit) =
         viewModelScope.launch {
             repository.postUserPackResponse(
-                postUserPackResponse = PostUserPackResponse(
+                postUserPackRequest = PostUserPackRequest(
                     packId = packId,
                     userId = userId
                 )
