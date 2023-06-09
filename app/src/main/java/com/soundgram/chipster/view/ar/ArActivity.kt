@@ -35,8 +35,11 @@ import com.soundgram.chipster.domain.model.ArPocaDistanceType
 import com.soundgram.chipster.domain.model.Poca
 import com.soundgram.chipster.util.*
 import com.soundgram.chipster.util.Constants.DEFAULT_USER_ID
-import com.soundgram.chipster.util.Constants.DEFEAULT_PACK_ID
-import com.soundgram.chipster.util.Constants.IMAGE_PATH
+import com.soundgram.chipster.util.Constants.DEFAULT_PACK_ID
+import com.soundgram.chipster.util.Constants.MOVE_BINDER
+import com.soundgram.chipster.util.Constants.MOVE_DETAIL
+import com.soundgram.chipster.util.Constants.MOVE_MAIN
+import com.soundgram.chipster.util.Constants.MOVE_MAP
 import com.soundgram.chipster.view.ar.ArpocaViewModel.Companion.POCATEXT_LOADING
 import kotlinx.coroutines.*
 import uk.co.appoly.arcorelocation.LocationMarker
@@ -79,7 +82,7 @@ class ArActivity : AppCompatActivity() {
     }
 
     private fun init() {
-        packId = intent.getIntExtra("packId", DEFEAULT_PACK_ID) // 테스트용 307
+        packId = intent.getIntExtra("packId", DEFAULT_PACK_ID) // 테스트용 307
         userId = intent.getIntExtra("userId", DEFAULT_USER_ID) // 1025
         _binding = ActivityArBinding.inflate(layoutInflater)
         viewModel = ViewModelProvider(this)[ArpocaViewModel::class.java]
@@ -316,8 +319,10 @@ class ArActivity : AppCompatActivity() {
         }
     }
 
-    private fun onFinish(resultCode: Int) {
-        setResult(resultCode)
+    private fun onFinish(requestCode: Int) {
+        setResult(requestCode, intent.apply {
+            this.putExtra("packId", packId)
+        })
         finish()
     }
 
@@ -409,9 +414,5 @@ class ArActivity : AppCompatActivity() {
 
     companion object {
         private const val DISTANCE_METER_FROM_USER = 100
-        const val MOVE_MAIN = 1
-        const val MOVE_BINDER = 2
-        const val MOVE_MAP = 3
-        const val MOVE_DETAIL = 4
     }
 }

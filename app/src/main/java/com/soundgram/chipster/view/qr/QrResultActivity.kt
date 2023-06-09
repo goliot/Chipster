@@ -1,7 +1,6 @@
 package com.soundgram.chipster.view.qr
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -9,7 +8,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.soundgram.chipster.R
 import com.soundgram.chipster.databinding.ActivityQrResultBinding
 import com.soundgram.chipster.util.Constants.DEFAULT_USER_ID
-import com.soundgram.chipster.util.Constants.DEFEAULT_PACK_ID
+import com.soundgram.chipster.util.Constants.DEFAULT_PACK_ID
 import com.soundgram.chipster.util.Constants.PACK_ID
 import com.soundgram.chipster.util.Constants.USER_ID
 import com.soundgram.chipster.util.hide
@@ -25,7 +24,7 @@ class QrResultActivity : AppCompatActivity() {
         viewModel = ViewModelProvider(this)[QrViewModel::class.java]
         setContentView(binding.root)
 
-        val packId = intent.getStringExtra(PACK_ID)?.toIntOrNull() ?: DEFEAULT_PACK_ID
+        val packId = intent.getStringExtra(PACK_ID)?.toIntOrNull() ?: DEFAULT_PACK_ID
         val userId = intent.getStringExtra(USER_ID)?.toIntOrNull() ?: DEFAULT_USER_ID
         initView()
 
