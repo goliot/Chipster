@@ -528,7 +528,10 @@ class LoginActivity : AppCompatActivity() {
             }
         }
         if (resultCode == MOVE_MAIN) {
-            webView.loadUrl("javascript:_Main();")
+            data?.let {
+                val packId = data.getIntExtra("packId", DEFAULT_PACK_ID)
+                webView.loadUrl("javascript:_Main(${packId});")
+            }
         }
         if (resultCode == MOVE_BINDER) {
             data?.let {
@@ -537,10 +540,13 @@ class LoginActivity : AppCompatActivity() {
             }
         }
         if (resultCode == MOVE_MAP) {
-            webView.loadUrl("javascript:moveMap();")
+            data?.let {
+                val packId = data.getIntExtra("packId", DEFAULT_PACK_ID)
+                webView.loadUrl("javascript:moveMap(${packId});")
+            }
         }
         if (resultCode == MOVE_DETAIL) {
-            
+
         }
     }
 
