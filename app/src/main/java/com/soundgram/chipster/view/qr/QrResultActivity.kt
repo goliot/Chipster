@@ -39,11 +39,11 @@ class QrResultActivity : AppCompatActivity() {
                 binding.startBt.show()
                 binding.backIv.hide()
             },
-            onError = {
+            onError = { errorMessage ->
                 Toast.makeText(this, "포카 다운로드 중 에러가 발생했습니다.", Toast.LENGTH_SHORT).show()
                 binding.resultIv.setImageResource(R.mipmap.img_qr_result_fail)
                 binding.titleTv.text = "인증에 실패했습니다."
-                binding.subtitleTv.text = "다시 시도해 주세요."
+                binding.subtitleTv.text = errorMessage
                 binding.startBt.hide()
                 binding.backIv.show()
             }
@@ -52,6 +52,8 @@ class QrResultActivity : AppCompatActivity() {
     }
 
     private fun initView() {
+        binding.titleTv.text = "인증 중입니다."
+        binding.subtitleTv.text = ""
         val finishClickListener = View.OnClickListener { finish() }
         binding.startBt.setOnClickListener(finishClickListener)
         binding.backIv.setOnClickListener(finishClickListener)

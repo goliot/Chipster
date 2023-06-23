@@ -15,9 +15,8 @@ class QrViewModel : ViewModel() {
         service = RestfulAdapter.chipsterService
     )
 
-    fun postUserPack(userId: Int, packId: Int, onSuccess: () -> Unit, onError: () -> Unit) =
+    fun postUserPack(userId: Int, packId: Int, onSuccess: () -> Unit, onError: (String) -> Unit) =
         viewModelScope.launch {
-            Log.i("dlgocks1", "postUserPack In")
             repository.postUserPackResponse(
                 postUserPackRequest = PostUserPackRequest(
                     packId = packId,
@@ -30,7 +29,7 @@ class QrViewModel : ViewModel() {
                         onSuccess()
                     },
                     onError = {
-                        onError()
+                        onError(it)
                     }
                 )
             }
