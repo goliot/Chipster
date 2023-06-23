@@ -9,6 +9,7 @@ import com.soundgram.chipster.network.safeFlow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
+import retrofit2.Retrofit
 
 class ArpocaRepository(
     val service: ChipsterService,
@@ -18,6 +19,9 @@ class ArpocaRepository(
         onLoading: () -> Unit = {},
         onComplete: () -> Unit = {},
     ): Flow<ApiResult<GetPocasResponse>> = safeFlow {
+        val retrofit: Retrofit = Retrofit.Builder().baseUrl("https://api.soundgram.ai/").build()
+        val serviceTest = retrofit.create(ChipsterService::class.java)
+        serviceTest.getPocasWithPackIDTest(2).enqueue()
         service.getPocasWithPackID(packId = packId)
     }.onStart { onLoading() }.onCompletion { onComplete() }
 
