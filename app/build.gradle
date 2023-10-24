@@ -12,8 +12,8 @@ android {
         applicationId "com.soundgram.chipster"
         minSdk 24
         targetSdk 33
-        versionCode 1
-        versionName "1.0"
+        versionCode 3
+        versionName "1.0.2"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -33,6 +33,9 @@ android {
     }
     buildFeatures {
         viewBinding true
+    }
+    configurations {
+        implementation.exclude module: 'protobuf-java'
     }
 }
 
@@ -85,6 +88,7 @@ dependencies {
     // Apng
     implementation 'com.github.oupson:Kapng-Android:1.0.10'
     implementation "androidx.work:work-runtime-ktx:2.7.1" // kotlin
+    implementation 'com.github.penfeizhou.android.animation:apng:2.25.0'
 
     // Lotti Animation
     implementation 'com.airbnb.android:lottie:5.0.2'
@@ -103,5 +107,6 @@ dependencies {
     implementation "com.squareup.retrofit2:converter-moshi:2.4.0"
     implementation 'com.google.code.gson:gson:2.8.9'
     implementation "com.squareup.retrofit2:converter-moshi:2.4.0"
+
 
 }

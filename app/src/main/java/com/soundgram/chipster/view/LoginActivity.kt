@@ -17,6 +17,8 @@ import android.view.*
 import android.webkit.*
 import android.webkit.WebView.WebViewTransport
 import android.widget.Toast
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.FileProvider
@@ -30,10 +32,17 @@ import com.soundgram.chipster.ChipsterApplication.Companion.totId
 import com.soundgram.chipster.databinding.ActivityLoginBinding
 import com.soundgram.chipster.util.Constants.CAMERA_REQUEST_CODE
 import com.soundgram.chipster.util.Constants.CROP_REQUEST_CODE
+import com.soundgram.chipster.util.Constants.DEFAULT_PACK_ID
+import com.soundgram.chipster.util.Constants.DEFAULT_POCA_ID
 import com.soundgram.chipster.util.Constants.ERROR
 import com.soundgram.chipster.util.Constants.GALLERY_REQUEST_CODE
 import com.soundgram.chipster.util.Constants.IMAGE_URI
+import com.soundgram.chipster.util.Constants.MOVE_BINDER
+import com.soundgram.chipster.util.Constants.MOVE_DETAIL
+import com.soundgram.chipster.util.Constants.MOVE_MAIN
+import com.soundgram.chipster.util.Constants.MOVE_MAP
 import com.soundgram.chipster.util.Constants.PERMISSION_REQUEST_CODE
+import com.soundgram.chipster.util.Constants.USER_ID
 import com.soundgram.chipster.util.baseWebViewSetting
 import com.soundgram.chipster.util.permissionCheck
 import com.soundgram.chipster.util.userid.Installation
@@ -56,7 +65,9 @@ class LoginActivity : AppCompatActivity() {
     private lateinit var prefs: SharedPreferences
     private lateinit var LOGIN_URL: String
     private lateinit var webView: WebView
+    private var filePathCallbackLollipop: ValueCallback<Array<Uri>>? = null
     private var imageUri: Uri? = null
+    private var cameraImageUri: Uri? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -95,7 +106,6 @@ class LoginActivity : AppCompatActivity() {
             isVerticalScrollBarEnabled = true
             isHorizontalScrollBarEnabled = false
             webViewClient = object : WebViewClient() {
-
                 override fun onReceivedError(
                     view: WebView,
                     errorCode: Int,
@@ -138,6 +148,14 @@ class LoginActivity : AppCompatActivity() {
             }
 
             webChromeClient = object : WebChromeClient() {
+
+                override fun onGeolocationPermissionsShowPrompt(
+                    origin: String?,
+                    callback: GeolocationPermissions.Callback?
+                ) {
+                    super.onGeolocationPermissionsShowPrompt(origin, callback)
+                    callback?.invoke(origin, true, false)
+                }
 
                 override fun onCreateWindow(
                     view: WebView,
@@ -206,6 +224,48 @@ class LoginActivity : AppCompatActivity() {
                     super.onCloseWindow(window)
                 }
 
+                override fun onShowFileChooser(
+                    webView: WebView?,
+                    filePathCallback: ValueCallback<Array<Uri>>?,
+                    fileChooserParams: FileChooserParams?
+                ): Boolean {
+                    Log.d("dlgocks1", "onShowFileChooser")
+                    // Callback 초기화 (중요!)
+                    if (filePathCallbackLollipop != null) {
+                        filePathCallbackLollipop!!.onReceiveValue(null)
+                        filePathCallbackLollipop = null
+                    }
+                    filePathCallbackLollipop = filePathCallback
+
+                    val intentCamera = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+                    val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
+                    val path = filesDir
+                    val file = File(path, "Soundgram_$timeStamp.jpg")
+                    // File 객체의 URI 를 얻는다.
+                    cameraImageUri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        FileProvider.getUriForFile(
+                            this@LoginActivity,
+                            applicationContext.packageName + ".fileprovider",
+                            file
+                        )
+                    } else {
+                        Uri.fromFile(file)
+                    }
+
+                    intentCamera.putExtra(MediaStore.EXTRA_OUTPUT, cameraImageUri)
+
+                    val intent = Intent(this@LoginActivity, CropActivity::class.java)
+                    startActivityForResult(
+                        intent,
+                        CROP_REQUEST_CODE
+                    )
+//                    val intent =
+//                        Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+//                    startActivityForResult(intent, GALLERY_REQUEST_CODE)
+
+                    return true
+                }
+
             }
             setLayerType(View.LAYER_TYPE_HARDWARE, null)
             setCookieAllow(this)
@@ -231,7 +291,10 @@ class LoginActivity : AppCompatActivity() {
             Log.i("dlgocks - userToken", token.toString())
             val postContents =
                 "&app_ver=$APP_VERSION&package=$packageName&ostype=1&uuid=$uuid&isGuide=$isGuide&token=$token&pushMovingPage=$pushMovingPage&tot_id=$totId"
-            binding.loginWebview.postUrl(LOGIN_URL, EncodingUtils.getBytes(postContents, "BASE64"))
+            binding.loginWebview.postUrl(
+                LOGIN_URL,
+                EncodingUtils.getBytes(postContents, "BASE64")
+            )
         }
     }
 
@@ -362,7 +425,8 @@ class LoginActivity : AppCompatActivity() {
         @JavascriptInterface
         fun _GetImageFromGallery() {
             Log.i("dlgocks1 - JavascriptInterface", "GetImageFromMobile")
-            val intent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+            val intent =
+                Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
             startActivityForResult(intent, GALLERY_REQUEST_CODE)
         }
 
@@ -381,23 +445,26 @@ class LoginActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun _MoveQR(userId: String) {
+            val intent = Intent(this@LoginActivity, QrActivity::class.java)
+            intent.putExtra(USER_ID, userId)
             Log.i("dlgocks1", userId)
-            startActivity(Intent(this@LoginActivity, QrActivity::class.java))
+            startActivity(intent)
         }
 
         @JavascriptInterface
         fun _MoveAR(userId: String, packId: String) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                Log.i("dlgocks1 - packId", userId)
-                Log.i("dlgocks1 - userId", packId)
-                val intent: Intent = Intent(this@LoginActivity, ArActivity::class.java)
-                intent.putExtra("packId", packId.toInt())
-                intent.putExtra("userId", userId.toInt())
-//                startActivityResult.launch(intent)
-                startActivity(intent)
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.N) {
+                Toast.makeText(this@LoginActivity, "AR 모듈을 실행할 수 없습니다.", Toast.LENGTH_SHORT).show()
                 return
             }
-            Toast.makeText(this@LoginActivity, "AR 모듈을 실행할 수 없습니다.", Toast.LENGTH_SHORT).show()
+            val userId = if (userId == "undefined") 5679 else userId.toInt()
+            val packId = if (packId == "undefined") 390 else packId.toInt()
+            Log.i("dlgocks1 - packId", userId.toString())
+            Log.i("dlgocks1 - userId ", packId.toString())
+            val intent = Intent(this@LoginActivity, ArActivity::class.java)
+            intent.putExtra("packId", packId)
+            intent.putExtra("userId", userId)
+            startActivityResult.launch(intent)
         }
     }
 
@@ -416,6 +483,26 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
+    private var startActivityResult = registerForActivityResult<Intent, ActivityResult>(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result: ActivityResult ->
+        if (result.resultCode == MOVE_MAIN) {
+            webView.loadUrl("javascript:_Main();")
+        }
+        if (result.resultCode == MOVE_BINDER) {
+//            val packId = data.getIntExtra("packId", DEFAULT_PACK_ID)
+//            webView.loadUrl("javascript:gotopackbinder(${packId});")
+        }
+        if (result.resultCode == MOVE_MAP) {
+            webView.loadUrl("javascript:moveMap();")
+        }
+        if (result.resultCode == MOVE_DETAIL) {
+//            data?.let {
+//                val packId = data.getIntExtra("packId", DEFAULT_PACK_ID)
+            webView.loadUrl("javascript:gotopackbinder(304,231);")
+//            }
+        }
+    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -436,8 +523,53 @@ class LoginActivity : AppCompatActivity() {
                 CROP_REQUEST_CODE
             )
         }
-        if (requestCode == CROP_REQUEST_CODE && resultCode == RESULT_OK) {
-            Log.i("dlgocks1 - CropResult", data.toString())
+        if (requestCode == CROP_REQUEST_CODE) {
+            if (resultCode == RESULT_OK) {
+                Log.i("dlgocks1", data.toString())
+                if (filePathCallbackLollipop == null) return
+                if (data == null) return
+                if (data.data == null) return
+                filePathCallbackLollipop!!.onReceiveValue(
+                    WebChromeClient.FileChooserParams.parseResult(
+                        resultCode,
+                        data
+                    )
+                )
+                filePathCallbackLollipop = null
+            } else {
+                if (filePathCallbackLollipop != null) {   //  resultCode에 RESULT_OK가 들어오지 않으면 null 처리하지 한다.(이렇게 하지 않으면 다음부터 input 태그를 클릭해도 반응하지 않음)
+                    filePathCallbackLollipop!!.onReceiveValue(null)
+                    filePathCallbackLollipop = null
+                }
+            }
+        }
+        if (resultCode == MOVE_MAIN) {
+            data?.let {
+                val packId = data.getIntExtra("packId", DEFAULT_PACK_ID)
+                webView.loadUrl("javascript:_Main(${packId});")
+            }
+        }
+        if (resultCode == MOVE_BINDER) {
+            data?.let {
+                val packId = data.getIntExtra("packId", DEFAULT_PACK_ID)
+                webView.loadUrl("javascript:gotopackbinder(${packId});")
+            }
+        }
+        if (resultCode == MOVE_MAP) {
+            data?.let {
+                val packId = data.getIntExtra("packId", DEFAULT_PACK_ID)
+                webView.loadUrl("javascript:moveMap(${packId});")
+            }
+        }
+        if (resultCode == MOVE_DETAIL) {
+            data?.let {
+                val packId = data.getIntExtra("packId", DEFAULT_PACK_ID)
+                val pocaId = data.getIntExtra("pocaId", DEFAULT_POCA_ID)
+                webView.loadUrl("javascript:gotopackbinder2(${packId},${pocaId});")
+                //webView.loadUrl("javascript:gotopackbinder(304,231);")
+            }
         }
     }
+
+
 }

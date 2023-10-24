@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
+import android.util.Log
 import android.view.View
 import android.view.Window
 import android.widget.ImageView
@@ -24,11 +25,13 @@ import kotlin.math.sin
 fun permissionCheck(context: Context, activity: Activity, onSuccess: () -> Unit) {
 
     val totalPermission = listOf(
-        Manifest.permission.READ_EXTERNAL_STORAGE,
-        Manifest.permission.WRITE_EXTERNAL_STORAGE,
+//        Manifest.permission.READ_EXTERNAL_STORAGE,
+//        Manifest.permission.WRITE_EXTERNAL_STORAGE,
         Manifest.permission.CAMERA,
         Manifest.permission.READ_PHONE_STATE,
         Manifest.permission.NFC,
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_COARSE_LOCATION
     )
     val requirePermissions = ArrayList<String>()
 
@@ -47,7 +50,7 @@ fun permissionCheck(context: Context, activity: Activity, onSuccess: () -> Unit)
         strArray = requirePermissions.toArray<String>(strArray)
         ActivityCompat.requestPermissions(activity, strArray, PERMISSION_REQUEST_CODE)
     }
-
+    Log.i("dlgocks1", requirePermissions.toString())
     if (requirePermissions.size == 0) {
         onSuccess()
     }

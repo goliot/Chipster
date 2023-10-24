@@ -44,8 +44,14 @@ fun <T> safeFlow(apiFunc: suspend () -> Response<T>): Flow<ApiResult<T>> = flow 
     val res = apiFunc.invoke()
     try {
         if (res.isSuccessful) {
-            val body = res.body() ?: throw java.lang.NullPointerException()
-            emit(ApiResult.Success(body))
+            val body = res.body()
+            if (body == null) {
+                emit(ApiResult.Error())
+            } else {
+                emit(ApiResult.Success(body))
+            }
+        } else {
+            emit(ApiResult.Error())
         }
     } catch (e: NullPointerException) {
         emit(ApiResult.Empty)
@@ -53,7 +59,6 @@ fun <T> safeFlow(apiFunc: suspend () -> Response<T>): Flow<ApiResult<T>> = flow 
         emit(ApiResult.Error(exception = e))
     } catch (e: Exception) {
         emit(ApiResult.Error(exception = e))
-    } finally {
     }
 }
 
