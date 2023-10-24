@@ -490,10 +490,17 @@ class LoginActivity : AppCompatActivity() {
             webView.loadUrl("javascript:_Main();")
         }
         if (result.resultCode == MOVE_BINDER) {
-            webView.loadUrl("javascript:gotopackbinder(390);")
+//            val packId = data.getIntExtra("packId", DEFAULT_PACK_ID)
+//            webView.loadUrl("javascript:gotopackbinder(${packId});")
         }
         if (result.resultCode == MOVE_MAP) {
             webView.loadUrl("javascript:moveMap();")
+        }
+        if (result.resultCode == MOVE_DETAIL) {
+//            data?.let {
+//                val packId = data.getIntExtra("packId", DEFAULT_PACK_ID)
+            webView.loadUrl("javascript:gotopackbinder(304,231);")
+//            }
         }
     }
 
@@ -559,6 +566,7 @@ class LoginActivity : AppCompatActivity() {
                 val packId = data.getIntExtra("packId", DEFAULT_PACK_ID)
                 val pocaId = data.getIntExtra("pocaId", DEFAULT_POCA_ID)
                 webView.loadUrl("javascript:gotopackbinder2(${packId},${pocaId});")
+                //webView.loadUrl("javascript:gotopackbinder(304,231);")
             }
         }
     }
