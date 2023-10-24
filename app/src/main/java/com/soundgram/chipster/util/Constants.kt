@@ -20,6 +20,7 @@ object Constants {
 
     const val DEFAULT_USER_ID = 1025
     const val DEFAULT_PACK_ID = 307
+    const val DEFAULT_POCA_ID = -1
 
     // IMAGE_PATH.format(팩아이디, 이미지이름) 으로 입력할 것
     const val IMAGE_PATH =

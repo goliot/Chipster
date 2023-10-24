@@ -109,9 +109,20 @@
         android:layout_width="120dp"
         android:layout_height="96dp"
         app:tint="@color/white"
-        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/chat_iv"
         app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginBottom="20dp" />
+
+    <ImageView
+        android:id="@+id/chat_iv"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        app:tint="@color/white"
+        android:src="@drawable/ic_chat_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginBottom="30dp" />
 
     <ImageView

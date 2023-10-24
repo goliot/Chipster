@@ -48,6 +48,9 @@ class ArpocaViewModel : ViewModel() {
     private val _isLoading: MutableLiveData<Boolean> = MutableLiveData(false)
     val isLoading: LiveData<Boolean> get() = _isLoading
 
+    private val _selectedPocaId: MutableLiveData<Int> = MutableLiveData(-1)
+    val selectedPocaId: LiveData<Int> get() = _selectedPocaId
+
     fun setLoadingTrue(): Unit = run { _isLoading.value = true }
     fun setLoadingFalse(): Unit = run { _isLoading.value = false }
 
@@ -76,6 +79,7 @@ class ArpocaViewModel : ViewModel() {
         onSuccess: () -> Unit,
         onError: (String) -> Unit,
     ) = viewModelScope.launch {
+        _selectedPocaId.value = pocaId
         arpocaRepository.getArpocaGet(
             getArPocaRequest = GetArPocaRequest(
                 packId = packId,

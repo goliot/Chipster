@@ -33,6 +33,7 @@ import com.soundgram.chipster.databinding.ActivityLoginBinding
 import com.soundgram.chipster.util.Constants.CAMERA_REQUEST_CODE
 import com.soundgram.chipster.util.Constants.CROP_REQUEST_CODE
 import com.soundgram.chipster.util.Constants.DEFAULT_PACK_ID
+import com.soundgram.chipster.util.Constants.DEFAULT_POCA_ID
 import com.soundgram.chipster.util.Constants.ERROR
 import com.soundgram.chipster.util.Constants.GALLERY_REQUEST_CODE
 import com.soundgram.chipster.util.Constants.IMAGE_URI
@@ -105,7 +106,6 @@ class LoginActivity : AppCompatActivity() {
             isVerticalScrollBarEnabled = true
             isHorizontalScrollBarEnabled = false
             webViewClient = object : WebViewClient() {
-
                 override fun onReceivedError(
                     view: WebView,
                     errorCode: Int,
@@ -148,6 +148,14 @@ class LoginActivity : AppCompatActivity() {
             }
 
             webChromeClient = object : WebChromeClient() {
+
+                override fun onGeolocationPermissionsShowPrompt(
+                    origin: String?,
+                    callback: GeolocationPermissions.Callback?
+                ) {
+                    super.onGeolocationPermissionsShowPrompt(origin, callback)
+                    callback?.invoke(origin, true, false)
+                }
 
                 override fun onCreateWindow(
                     view: WebView,
@@ -445,17 +453,18 @@ class LoginActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun _MoveAR(userId: String, packId: String) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                Log.i("dlgocks1 - packId", userId)
-                Log.i("dlgocks1 - userId", packId)
-                val intent: Intent = Intent(this@LoginActivity, ArActivity::class.java)
-                intent.putExtra("packId", packId.toInt())
-                intent.putExtra("userId", userId.toInt())
-                startActivityResult.launch(intent)
-//                startActivity(intent)
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.N) {
+                Toast.makeText(this@LoginActivity, "AR 모듈을 실행할 수 없습니다.", Toast.LENGTH_SHORT).show()
                 return
             }
-            Toast.makeText(this@LoginActivity, "AR 모듈을 실행할 수 없습니다.", Toast.LENGTH_SHORT).show()
+            val userId = if (userId == "undefined") 5679 else userId.toInt()
+            val packId = if (packId == "undefined") 390 else packId.toInt()
+            Log.i("dlgocks1 - packId", userId.toString())
+            Log.i("dlgocks1 - userId ", packId.toString())
+            val intent = Intent(this@LoginActivity, ArActivity::class.java)
+            intent.putExtra("packId", packId)
+            intent.putExtra("userId", userId)
+            startActivityResult.launch(intent)
         }
     }
 
@@ -546,7 +555,11 @@ class LoginActivity : AppCompatActivity() {
             }
         }
         if (resultCode == MOVE_DETAIL) {
-
+            data?.let {
+                val packId = data.getIntExtra("packId", DEFAULT_PACK_ID)
+                val pocaId = data.getIntExtra("pocaId", DEFAULT_POCA_ID)
+                webView.loadUrl("javascript:gotopackbinder2(${packId},${pocaId});")
+            }
         }
     }
 

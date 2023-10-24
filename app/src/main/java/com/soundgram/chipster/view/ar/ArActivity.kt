@@ -1,6 +1,7 @@
 package com.soundgram.chipster.view.ar
 
 import OnSwipeTouchListener
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
@@ -15,6 +16,7 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModelProvider
 import com.bumptech.glide.Glide
 import com.github.penfeizhou.animation.apng.APNGDrawable
@@ -89,8 +91,17 @@ class ArActivity : AppCompatActivity() {
         binding.arSceneView.planeRenderer.isVisible = false
         binding.scanningTv.text = POCATEXT_LOADING
 
+//        initRemoteMonster()
         viewModel.getPocasWithPackId(packId = packId, onError = showToastMessage)
     }
+
+//    private fun initRemoteMonster() {
+//        ActivityCompat.requestPermissions(
+//            this,
+//            arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO),
+//            0
+//        )
+//    }
 
     /** 뷰모델에서 옵저빙할 값들을 정의한다. */
     private fun initObserver() {
@@ -223,9 +234,9 @@ class ArActivity : AppCompatActivity() {
                             binding.apply {
                                 getMotionEndedIv.hide()
                                 rotationIv.show()
-                                Handler(Looper.getMainLooper()).postDelayed({
-                                    onFinish(MOVE_DETAIL)
-                                }, 2000)
+//                                Handler(Looper.getMainLooper()).postDelayed({
+//                                    onFinish(MOVE_DETAIL)
+//                                }, 2000)
                             }
                         }
                     )
@@ -322,6 +333,7 @@ class ArActivity : AppCompatActivity() {
     private fun onFinish(requestCode: Int) {
         setResult(requestCode, intent.apply {
             this.putExtra("packId", packId)
+            this.putExtra("pocaId", viewModel.selectedPocaId.value)
         })
         finish()
     }
