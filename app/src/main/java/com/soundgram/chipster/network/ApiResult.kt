@@ -16,7 +16,7 @@ sealed class ApiResult<out T> {
 
     fun handleResponse(
         emptyMsg: String = "결과 값이 없어요.",
-        errorMsg: String = "인터넷 상태를 확인해주세요.",
+        errorMsg: String = "네트워크 요청에 실패했어요.",
         onError: (String) -> Unit,
         onSuccess: (T) -> Unit,
     ) {
@@ -25,6 +25,7 @@ sealed class ApiResult<out T> {
             is Empty -> handleException {
                 onError(emptyMsg)
             }
+
             is Error -> handleException(exception) {
                 onError(errorMsg)
             }

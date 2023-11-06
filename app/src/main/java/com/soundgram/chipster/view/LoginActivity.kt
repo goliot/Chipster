@@ -453,7 +453,7 @@ class LoginActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun _MoveAR(userId: String, packId: String) {
-            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.N) {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
                 Toast.makeText(this@LoginActivity, "AR 모듈을 실행할 수 없습니다.", Toast.LENGTH_SHORT).show()
                 return
             }
@@ -466,41 +466,41 @@ class LoginActivity : AppCompatActivity() {
             intent.putExtra("userId", userId)
             startActivityResult.launch(intent)
         }
-    }
 
-    fun getCameraImageURI(): Uri? {
-        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
-        val path = filesDir
-        val file = File(path, "chipster_$timeStamp.jpg")
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            FileProvider.getUriForFile(
-                this@LoginActivity,
-                applicationContext.packageName + ".fileprovider",
-                file
-            )
-        } else {
-            Uri.fromFile(file)
+        fun getCameraImageURI(): Uri? {
+            val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss").format(Date())
+            val path = filesDir
+            val file = File(path, "chipster_$timeStamp.jpg")
+            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                FileProvider.getUriForFile(
+                    this@LoginActivity,
+                    applicationContext.packageName + ".fileprovider",
+                    file
+                )
+            } else {
+                Uri.fromFile(file)
+            }
         }
-    }
 
-    private var startActivityResult = registerForActivityResult<Intent, ActivityResult>(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result: ActivityResult ->
-        if (result.resultCode == MOVE_MAIN) {
-            webView.loadUrl("javascript:_Main();")
-        }
-        if (result.resultCode == MOVE_BINDER) {
+        private var startActivityResult = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result: ActivityResult ->
+            if (result.resultCode == MOVE_MAIN) {
+                webView.loadUrl("javascript:_Main();")
+            }
+            if (result.resultCode == MOVE_BINDER) {
 //            val packId = data.getIntExtra("packId", DEFAULT_PACK_ID)
 //            webView.loadUrl("javascript:gotopackbinder(${packId});")
-        }
-        if (result.resultCode == MOVE_MAP) {
-            webView.loadUrl("javascript:moveMap();")
-        }
-        if (result.resultCode == MOVE_DETAIL) {
+            }
+            if (result.resultCode == MOVE_MAP) {
+                webView.loadUrl("javascript:moveMap();")
+            }
+            if (result.resultCode == MOVE_DETAIL) {
 //            data?.let {
 //                val packId = data.getIntExtra("packId", DEFAULT_PACK_ID)
-            webView.loadUrl("javascript:gotopackbinder(304,231);")
+                webView.loadUrl("javascript:gotopackbinder(304,231);")
 //            }
+            }
         }
     }
 
@@ -570,6 +570,5 @@ class LoginActivity : AppCompatActivity() {
             }
         }
     }
-
 
 }

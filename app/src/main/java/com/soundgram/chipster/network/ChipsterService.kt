@@ -13,21 +13,21 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface ChipsterService {
-    @GET("v1/arpocasWithPackInfo/{packId}")
+    @GET("api/v1/arpocasWithPackInfo/{packId}")
     suspend fun getPocasWithPackID(@Path("packId") packId: Int): Response<GetPocasResponse>
 
-    @GET("v1/arpocasWithPackInfo/{packId}")
+    @GET("api/v1/arpocasWithPackInfo/{packId}")
     fun getPocasWithPackIDTest(@Path("packId") packId: Int): Call<GetPocasResponse>
 
-    @GET("v1/arpoca/pack/{packId}")
+    @GET("api/v1/arpoca/pack/{packId}")
     suspend fun getPackInfo(@Path("packId") packId: Int): Response<PackInfo>
 
-    @POST("v1/arpoca/userPack")
+    @POST("api/v1/arpoca/userPack")
     suspend fun postUserPackResponse(
         @Body postUserPackRequest: PostUserPackRequest
     ): Response<DefaultResponse>
 
-    @POST("v1/arpoca/get")
+    @POST("phapi/arpoca/createPocaGet.php")
     suspend fun getArpocaGet(
         @Body getArPocaRequest: GetArPocaRequest
     ): Response<DefaultResponse>

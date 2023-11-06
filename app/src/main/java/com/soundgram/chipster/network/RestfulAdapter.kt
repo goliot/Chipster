@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit
 
 object RestfulAdapter {
 
-    private const val BASE_URI = "https://chipsterplay.soundgram.co.kr/api/"
+    private const val BASE_URI = "https://chipsterplay.soundgram.co.kr/"
     private val builder = Retrofit.Builder()
         .baseUrl(BASE_URI)
         .client(

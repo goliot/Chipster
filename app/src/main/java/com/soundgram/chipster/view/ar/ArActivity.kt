@@ -91,17 +91,9 @@ class ArActivity : AppCompatActivity() {
         binding.arSceneView.planeRenderer.isVisible = false
         binding.scanningTv.text = POCATEXT_LOADING
 
-//        initRemoteMonster()
         viewModel.getPocasWithPackId(packId = packId, onError = showToastMessage)
     }
 
-//    private fun initRemoteMonster() {
-//        ActivityCompat.requestPermissions(
-//            this,
-//            arrayOf(Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO),
-//            0
-//        )
-//    }
 
     /** 뷰모델에서 옵저빙할 값들을 정의한다. */
     private fun initObserver() {
@@ -111,7 +103,7 @@ class ArActivity : AppCompatActivity() {
                 Glide.with(this)
 //                    .load(IMAGE_PATH.format(packId, viewModel.packInfo.value?.targetImg))
                     .load("https://chipsterplay.soundgram.co.kr/media/arpoca/307/pack_img/target_img_1.png")
-                    .error(R.drawable.bottom_04)
+                    .error(com.google.android.material.R.drawable.mtrl_ic_error)
                     .into(viewRenderable.view.findViewById(R.id.ar_target_iv))
                 viewRenderable.sizer = FixedWidthViewSizer(0.2f)
             }
@@ -180,15 +172,20 @@ class ArActivity : AppCompatActivity() {
                     it.latitude,
                     getArView(it)
                 ).apply {
-                    setScaleAtDistance(false)
+//                    setScaleAtDistance(false)
                     this.node.apply {
-                        val lookRotation =
-                            Quaternion.lookRotation(Vector3.zero(), Vector3.zero())
-                        worldRotation = lookRotation
-                        worldPosition = Vector3.one()
-                        worldScale = Vector3.one()
+//                        val lookRotation =
+//                            Quaternion.lookRotation(Vector3.zero(), Vector3.zero())
+//                        worldRotation = lookRotation
+//                        worldPosition = Vector3.one()
+//                        worldScale = Vector3.one()
                         setRenderEvent {
-                            worldScale = Vector3.one()
+//                            val cameraPosition = arSceneView.scene.camera.worldPosition
+//                            val direction = Vector3.subtract(cameraPosition, node.worldPosition)
+//                            val lookRotation = Quaternion.lookRotation(direction, Vector3.up())
+//                            node.worldRotation = lookRotation
+//                            worldScale = Vector3.one()
+                            worldScale = Vector3.add(worldScale, Vector3.one())
                         }
                     }
                 }
@@ -300,7 +297,6 @@ class ArActivity : AppCompatActivity() {
                                 Handler(Looper.getMainLooper()).postDelayed({
                                     binding.getMotionEndedIv.setImageWithUrl(
                                         this@ArActivity,
-//                                        url = IMAGE_PATH.format(packId, packInfo.value?.cardImg)
                                         url = "https://chipsterplay.soundgram.co.kr/media/arpoca/307/pack_img/pack_img_1.png"
                                     )
                                     binding.getMotionEndedIv.show()
@@ -337,6 +333,58 @@ class ArActivity : AppCompatActivity() {
         })
         finish()
     }
+
+    /**
+     * 랭킹 입력받아
+     * 랭킹 레이아웃의 별 아이콘을 설정한다.
+     */
+//    private fun setRankingLayout(curQty: Int) {
+//        binding.apply {
+//            when (curQty) {
+//                5 -> {
+//                    ranking1Iv.setColorFilter(Color.parseColor(getString(R.string.rankingColor)))
+//                    ranking2Iv.setColorFilter(Color.parseColor(getString(R.string.rankingColor)))
+//                    ranking3Iv.setColorFilter(Color.parseColor(getString(R.string.rankingColor)))
+//                    ranking4Iv.setColorFilter(Color.parseColor(getString(R.string.rankingColor)))
+//                    ranking5Iv.setColorFilter(Color.parseColor(getString(R.string.rankingColor)))
+//                }
+//
+//                4 -> {
+//                    ranking1Iv.setColorFilter(Color.parseColor(getString(R.string.rankingColor)))
+//                    ranking2Iv.setColorFilter(Color.parseColor(getString(R.string.rankingColor)))
+//                    ranking3Iv.setColorFilter(Color.parseColor(getString(R.string.rankingColor)))
+//                    ranking4Iv.setColorFilter(Color.parseColor(getString(R.string.rankingColor)))
+//                    ranking5Iv.setColorFilter(Color.TRANSPARENT)
+//                }
+//
+//                3 -> {
+//                    ranking1Iv.setColorFilter(Color.parseColor(getString(R.string.rankingColor)))
+//                    ranking2Iv.setColorFilter(Color.parseColor(getString(R.string.rankingColor)))
+//                    ranking3Iv.setColorFilter(Color.parseColor(getString(R.string.rankingColor)))
+//                    ranking4Iv.setColorFilter(Color.TRANSPARENT)
+//                    ranking5Iv.setColorFilter(Color.TRANSPARENT)
+//                }
+//
+//                2 -> {
+//                    ranking1Iv.setColorFilter(Color.parseColor(getString(R.string.rankingColor)))
+//                    ranking2Iv.setColorFilter(Color.parseColor(getString(R.string.rankingColor)))
+//                    ranking3Iv.setColorFilter(Color.TRANSPARENT)
+//                    ranking4Iv.setColorFilter(Color.TRANSPARENT)
+//                    ranking5Iv.setColorFilter(Color.TRANSPARENT)
+//                }
+//
+//                1 -> {
+//                    ranking1Iv.setColorFilter(Color.parseColor(getString(R.string.rankingColor)))
+//                    ranking2Iv.setColorFilter(Color.TRANSPARENT)
+//                    ranking3Iv.setColorFilter(Color.TRANSPARENT)
+//                    ranking4Iv.setColorFilter(Color.TRANSPARENT)
+//                    ranking5Iv.setColorFilter(Color.TRANSPARENT)
+//                }
+//            }
+//        }
+//        binding.ranking1Iv.setColorFilter(Color.parseColor(getString(R.string.rankingColor)))
+//    }
+
 
     override fun onBackPressed() {
         if (doubleBackToExitPressedOnce) {
