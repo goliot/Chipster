@@ -8,7 +8,7 @@
         android:id="@+id/crop_container"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintDimensionRatio="1:1.25"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -23,8 +23,8 @@
             imagecrop:gridOuterColor="#ffffff"
             imagecrop:gridOuterStroke="1dp"
             imagecrop:outsideLayerColor="#99000000"
-            imagecrop:setInnerGridMode="on"
-            imagecrop:setOuterGridMode="on" />
+            imagecrop:setInnerGridMode="off"
+            imagecrop:setOuterGridMode="off" />
     </LinearLayout>
 
     <androidx.appcompat.widget.AppCompatButton

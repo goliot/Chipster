@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import android.view.Gravity
 import android.view.View
 import android.widget.Toast
 import androidx.annotation.RequiresApi
@@ -71,6 +72,7 @@ class ArActivity : AppCompatActivity() {
         Toast.makeText(this@ArActivity, it, Toast.LENGTH_SHORT).show()
     }
     private var latency = 0L
+    private var fpsVisible = false
 
     @RequiresApi(VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -82,20 +84,37 @@ class ArActivity : AppCompatActivity() {
         initListener()
         setArView()
 
-        binding.getPocaIv.setOnClickListener {
-            binding.frameTv.visibility = View.VISIBLE
-            binding.latencyTv.visibility = View.VISIBLE
-            binding.latencyTv.text = "latency : $latency"
-            TinyDancer.create()
-                .redFlagPercentage(.0f) // set red indicator for 10%....different from default
-                .startingXPosition(0)
-                .startingYPosition(700)
-                .addFrameDataCallback { previousFrameNS, currentFrameNS, droppedFrames ->
-                    // NS를 활용해 FPS를 구해줘
-                    _binding?.frameTv?.text =
-                        "FPS : " + 1000000000 / (currentFrameNS - previousFrameNS)
+        binding.getPocaIv.setOnLongClickListener {
+            if (fpsVisible) {
+                binding.frameTv.visibility = View.GONE
+                binding.latencyTv.visibility = View.GONE
+                TinyDancer.hide(this)
+                fpsVisible = false
+            } else {
+                binding.frameTv.visibility = View.VISIBLE
+                binding.latencyTv.visibility = View.VISIBLE
+                if (latency == 0L) {
+                    binding.latencyTv.text = "Latency : 1ms"
+                } else {
+                    binding.latencyTv.text = "Latency : ${latency}ms"
                 }
-                .show(this)
+                TinyDancer.create()
+                    .redFlagPercentage(.0f) // set red indicator for 10%....different from default
+                    .startingXPosition(0)
+                    .startingYPosition(1000)
+                    .startingGravity(Gravity.START)
+                    .addFrameDataCallback { previousFrameNS, currentFrameNS, droppedFrames ->
+                        val fps = 1000000000 / (currentFrameNS - previousFrameNS)
+                        if (fps <= 30) {
+                            _binding?.frameTv?.text =
+                                "FPS : " + 1000000000 / (currentFrameNS - previousFrameNS)
+                        }
+                    }
+                    .show(this)
+                fpsVisible = true
+            }
+
+            true
         }
     }
 
@@ -331,6 +350,7 @@ class ArActivity : AppCompatActivity() {
                                 }, 3200)
                             },
                         )
+                        setLoadingFalse()
                     })
             }
             false
@@ -472,9 +492,15 @@ class ArActivity : AppCompatActivity() {
         arSceneView.pause()
     }
 
+    override fun onStop() {
+        super.onStop()
+    }
+
     public override fun onDestroy() {
         super.onDestroy()
-        TinyDancer.hide(this)
+        if (fpsVisible) {
+            TinyDancer.hide(this)
+        }
         showSystemUI(window, binding.root)
         arSceneView.destroy()
         _binding = null

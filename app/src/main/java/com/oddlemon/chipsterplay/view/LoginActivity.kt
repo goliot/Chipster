@@ -87,17 +87,23 @@ class LoginActivity : AppCompatActivity() {
                 webView.loadUrl("javascript:_Main();")
             }
             if (result.resultCode == MOVE_BINDER) {
-//            val packId = data.getIntExtra("packId", DEFAULT_PACK_ID)
-//            webView.loadUrl("javascript:gotopackbinder(${packId});")
+                result.data?.let {
+                    val packId = it.getIntExtra("packId", DEFAULT_PACK_ID)
+                    webView.loadUrl("javascript:gotopackbinder(${packId});")
+                }
             }
             if (result.resultCode == MOVE_MAP) {
-                webView.loadUrl("javascript:moveMap();")
+                result.data?.let {
+                    val packId = it.getIntExtra("packId", DEFAULT_PACK_ID)
+                    webView.loadUrl("javascript:moveMap($packId);")
+                }
             }
             if (result.resultCode == MOVE_DETAIL) {
-//            data?.let {
-//                val packId = data.getIntExtra("packId", DEFAULT_PACK_ID)
-                webView.loadUrl("javascript:gotopackbinder(304,231);")
-//            }
+                result.data?.let {
+                    val packId = it.getIntExtra("packId", DEFAULT_PACK_ID)
+                    val pocaID = it.getIntExtra("pocaId", DEFAULT_PACK_ID)
+                    webView.loadUrl("javascript:gotopackbinder(304,231);")
+                }
             }
         }
         permissionCheck(

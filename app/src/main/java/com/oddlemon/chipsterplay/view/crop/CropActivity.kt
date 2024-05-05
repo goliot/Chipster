@@ -106,7 +106,7 @@ class CropActivity : AppCompatActivity() {
                 resultIntent = data
             }
             binding.cropImageView.setImageURI(resultIntent.data)
-            binding.cropImageView.setAspectRatio(1, 1)
+            binding.cropImageView.setAspectRatio(4, 5)
         } else {
             finish()
         }

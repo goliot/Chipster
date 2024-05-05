@@ -18,9 +18,9 @@ object Constants {
     const val PACK_ID = "packId"
     const val USER_ID = "userId"
 
-    const val DEFAULT_USER_ID = 432
-    const val DEFAULT_PACK_ID = 1208
-    const val DEFAULT_POCA_ID = -1
+    const val DEFAULT_USER_ID = 416
+    const val DEFAULT_PACK_ID = 1025
+    const val DEFAULT_POCA_ID = 444
 
     // IMAGE_PATH.format(팩아이디, 이미지이름) 으로 입력할 것
     const val IMAGE_PATH =

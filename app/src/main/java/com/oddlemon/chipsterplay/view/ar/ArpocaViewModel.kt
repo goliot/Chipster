@@ -85,7 +85,7 @@ class ArpocaViewModel : ViewModel() {
             )
         ).collectLatest { result ->
             result.handleResponse(
-                onError = { onError("이미 획득한 포카입니다.") },
+                onError = { onSuccess() },
                 emptyMsg = "카드를 획득할 수 없어요."
             ) { res ->
                 onSuccess()
