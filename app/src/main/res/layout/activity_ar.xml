@@ -119,6 +119,7 @@
         android:layout_width="24dp"
         android:layout_height="24dp"
         app:tint="@color/white"
+        android:visibility="gone"
         android:src="@drawable/ic_chat_24"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -388,6 +389,34 @@
         app:lottie_loop="true"
         app:lottie_autoPlay="true"
         app:lottie_rawRes="@raw/scanning" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/latency_tv"
+        android:textSize="25sp"
+        android:textStyle="bold"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="30dp"
+        app:layout_constraintBottom_toTopOf="@id/frame_tv"
+        app:layout_constraintStart_toStartOf="parent"
+        android:text="Latency TV"
+        android:visibility="invisible"
+        android:layout_marginBottom="20dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/frame_tv"
+        android:textSize="25sp"
+        android:textStyle="bold"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="30dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:text="프레임율"
+        android:visibility="invisible"
+        android:layout_marginBottom="80dp" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
