@@ -84,7 +84,7 @@ class ArActivity : AppCompatActivity() {
         initListener()
         setArView()
 
-        binding.getPocaIv.setOnLongClickListener {
+        binding.getPocaIv.setOnLongClickListener { //여긴가???
             if (fpsVisible) {
                 binding.frameTv.visibility = View.GONE
                 binding.latencyTv.visibility = View.GONE
@@ -238,24 +238,66 @@ class ArActivity : AppCompatActivity() {
         }
     }
 
-    private fun completeArLayout() {
-        CompletableFuture
-            .allOf(arLayout)
-            .handle<Any?> { _: Void?, throwable: Throwable? ->
-                if (throwable != null) {
-                    DemoUtils.displayError(this, "Unable to load renderables", throwable)
-                    return@handle null
+//    private fun completeArLayout() {
+//        CompletableFuture
+//            .allOf(arLayout)
+//            .handle<Any?> { _: Void?, throwable: Throwable? ->
+//                if (throwable != null) {
+//                    DemoUtils.displayError(this, "Unable to load renderables", throwable)
+//                    return@handle null
+//                }
+//                try {
+//                    arLayoutRenderable = arLayout.get()
+//                    viewModel.hasFinishedLoading = true
+//                } catch (ex: InterruptedException) {
+//                    DemoUtils.displayError(this, "Unable to load renderables", ex)
+//                } catch (ex: ExecutionException) {
+//                    DemoUtils.displayError(this, "Unable to load renderables", ex)
+//                }
+//                null
+//            }
+//    }
+private fun completeArLayout() {
+    CompletableFuture
+        .allOf(arLayout)
+        .handle<Any?> { _: Void?, throwable: Throwable? ->
+            if (throwable != null) {
+                // 예외가 발생한 경우 처리
+                val errorMessage = "Unable to load renderables: ${throwable.message}"
+                Log.e("CompleteArLayout", errorMessage, throwable)
+                // 사용자에게 적절한 안내 메시지를 표시
+                runOnUiThread {
+                    // 사용자에게 보여줄 메시지를 작성하고 알림 또는 다른 적절한 방법으로 표시
+                    val message = "Sorry, we couldn't load the renderables. Please try again later."
+                    showToastMessage(message)
                 }
-                try {
-                    arLayoutRenderable = arLayout.get()
-                    viewModel.hasFinishedLoading = true
-                } catch (ex: InterruptedException) {
-                    DemoUtils.displayError(this, "Unable to load renderables", ex)
-                } catch (ex: ExecutionException) {
-                    DemoUtils.displayError(this, "Unable to load renderables", ex)
-                }
-                null
+                // 예외 처리 완료 후 null 반환
+                return@handle null
             }
+            try {
+                // 모든 CompletableFuture가 완료된 후 실행할 코드
+                arLayoutRenderable = arLayout.get()
+                viewModel.hasFinishedLoading = true
+            } catch (ex: InterruptedException) {
+                // InterruptedException 예외 처리
+                handleException(ex)
+            } catch (ex: ExecutionException) {
+                // ExecutionException 예외 처리
+                handleException(ex)
+            }
+            // 예외 처리 완료 후 null 반환
+            null
+        }
+}
+
+    // 예외 처리를 위한 함수
+    private fun handleException(ex: Exception) {
+        Log.e("CompleteArLayout", "Exception occurred", ex)
+        runOnUiThread {
+            // 사용자에게 보여줄 메시지를 작성하고 알림 또는 다른 적절한 방법으로 표시
+            val message = "An error occurred: ${ex.message}"
+            showToastMessage(message)
+        }
     }
 
     /** ArActivity에 필요한 리스너를 정의 */
