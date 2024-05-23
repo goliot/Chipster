@@ -489,19 +489,33 @@ class LoginActivity : AppCompatActivity() {
 
         @JavascriptInterface
         fun _MoveAR(userId: String, packId: String) {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-                Toast.makeText(this@LoginActivity, "AR 모듈을 실행할 수 없습니다.", Toast.LENGTH_SHORT).show()
-                return
+            Log.i("MoveAR", "Function _MoveAR called with userId: $userId and packId: $packId")
+
+            try {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
+                    Toast.makeText(this@LoginActivity, "AR 모듈을 실행할 수 없습니다.", Toast.LENGTH_SHORT).show()
+                    return
+                }
+
+                val userIdInt = if (userId == "undefined") 1208 else userId.toInt()
+                val packIdInt = if (packId == "undefined") 432 else packId.toInt()
+
+                Log.i("MoveAR", "Parsed userId: $userIdInt, packId: $packIdInt")
+
+                val intent = Intent(this@LoginActivity, ArActivity::class.java)
+                intent.putExtra("packId", packIdInt)
+                intent.putExtra("userId", userIdInt)
+
+                Log.i("MoveAR", "Starting AR Activity with packId: $packIdInt, userId: $userIdInt")
+
+                startActivityResult.launch(intent)
+            } catch (e: NumberFormatException) {
+                Log.e("MoveAR", "Error parsing userId or packId: ${e.message}")
+                Toast.makeText(this@LoginActivity, "잘못된 ID 형식입니다.", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Log.e("MoveAR", "Unexpected error: ${e.message}")
+                Toast.makeText(this@LoginActivity, "예기치 않은 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
             }
-            val userId = if (userId == "undefined") 5679 else userId.toInt()
-            val packId = if (packId == "undefined") 390 else packId.toInt()
-            Log.i("dlgocks1 - packId", userId.toString())
-            Log.i("dlgocks1 - userId ", packId.toString())
-            val intent = Intent(this@LoginActivity, ArActivity::class.java)
-            intent.putExtra("packId", packId)
-            intent.putExtra("userId", userId)
-            Log.i("dlgocks1 - userId ", "${startActivityResult}")
-            startActivityResult.launch(intent)
         }
 
         fun getCameraImageURI(): Uri? {

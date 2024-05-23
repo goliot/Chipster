@@ -150,26 +150,26 @@ class ArActivity : AppCompatActivity() {
     /** ARview를 생성한다. */
     private fun setArView() {
         arSceneView = binding.arSceneView
+
+        // ViewRenderable 빌드
         arLayout = ViewRenderable.builder()
             .setView(this, R.layout.ar_target_layout)
             .build()
-        completeArLayout()
 
-        arSceneView.scene.addOnUpdateListener {
-            if (!viewModel.hasFinishedLoading) {
-                return@addOnUpdateListener
-            }
-            if (locationScene == null) {
-                locationScene = LocationScene(this, this, arSceneView)
-                locationScene?.distanceLimit = 1
-                locationScene?.anchorRefreshInterval = Int.MAX_VALUE
-                observePoca()
-            }
-            val frame = arSceneView.arFrame ?: return@addOnUpdateListener
-            if (frame.camera.trackingState != TrackingState.TRACKING) {
-                return@addOnUpdateListener
-            }
-            locationScene?.processFrame(frame)
+        // ViewRenderable 빌드 완료 후 처리
+        arLayout.thenAccept { viewRenderable ->
+            // 텍스처 설정
+            Glide.with(this)
+                .load("https://chipsterplay.soundgram.co.kr/media/arpoca/307/pack_img/target_img_1.png")
+                .error(com.google.android.material.R.drawable.mtrl_ic_error)
+                .into(viewRenderable.view.findViewById(R.id.ar_target_iv))
+            viewRenderable.sizer = FixedWidthViewSizer(0.2f)
+
+            // AR Scene에 ViewRenderable 추가
+            arSceneView.scene.addChild(Node().apply {
+                renderable = viewRenderable
+                localPosition = Vector3(0f, 0f, -1f) // View의 위치 설정
+            })
         }
     }
 
@@ -490,19 +490,66 @@ private fun completeArLayout() {
         )
     }
 
+//    override fun onResume() {
+//        super.onResume()
+//        if (arSceneView.session == null) {
+//            // 세션이 아직 만들어지지 않은 경우 렌더링을 다시 시작하지 마십시오.
+//            // ARCore를 업데이트해야 하거나 사용 권한이 아직 부여되지 않은 경우 이 문제가 발생할 수 있습니다
+//            try {
+//                val session: Session? =
+//                    DemoUtils.createArSession(this@ArActivity, viewModel.installRequested)
+//                if (session == null) {
+//                    viewModel.installRequested = ARLocationPermissionHelper.hasPermission(this)
+//                    return
+//                } else {
+//                    arSceneView.setupSession(session)
+//                }
+//            } catch (e: UnavailableException) {
+//                DemoUtils.handleSessionException(this, e)
+//            }
+//        }
+//        try {
+//            arSceneView.resume()
+//            locationScene?.resume()
+//        } catch (ex: CameraNotAvailableException) {
+//            DemoUtils.displayError(this, "Unable to get camera", ex)
+//            onFinish(MOVE_MAIN)
+//            return
+//        }
+//        val cameraConfigFilter = CameraConfigFilter(arSceneView.session)
+//        cameraConfigFilter.facingDirection = CameraConfig.FacingDirection.FRONT
+//        val cameraConfigs =
+//            arSceneView.session?.getSupportedCameraConfigs(cameraConfigFilter)
+//        if (cameraConfigs?.isNotEmpty() == true) {
+//            arSceneView.session?.cameraConfig = cameraConfigs[0]!!
+//        }
+//        gpsTracker = GpsTracker(this)
+//        viewModel.userLat = gpsTracker.userlatitude
+//        viewModel.userLong = gpsTracker.userlongitude
+//    }
     override fun onResume() {
         super.onResume()
         if (arSceneView.session == null) {
             // 세션이 아직 만들어지지 않은 경우 렌더링을 다시 시작하지 마십시오.
             // ARCore를 업데이트해야 하거나 사용 권한이 아직 부여되지 않은 경우 이 문제가 발생할 수 있습니다
             try {
-                val session: Session? =
-                    DemoUtils.createArSession(this@ArActivity, viewModel.installRequested)
+                val session: Session? = DemoUtils.createArSession(this@ArActivity, viewModel.installRequested)
                 if (session == null) {
                     viewModel.installRequested = ARLocationPermissionHelper.hasPermission(this)
                     return
                 } else {
+                    // 세션 일시 중지
+                    session.pause()
                     arSceneView.setupSession(session)
+                    // 카메라 구성 설정 코드 추가
+                    val cameraConfigFilter = CameraConfigFilter(session)
+                    cameraConfigFilter.facingDirection = CameraConfig.FacingDirection.FRONT
+                    val cameraConfigs = session.getSupportedCameraConfigs(cameraConfigFilter)
+                    if (cameraConfigs.isNotEmpty()) {
+                        arSceneView.session?.cameraConfig = cameraConfigs[0]
+                    }
+                    // 세션 다시 재개
+                    session.resume()
                 }
             } catch (e: UnavailableException) {
                 DemoUtils.handleSessionException(this, e)
@@ -516,13 +563,7 @@ private fun completeArLayout() {
             onFinish(MOVE_MAIN)
             return
         }
-        val cameraConfigFilter = CameraConfigFilter(arSceneView.session)
-        cameraConfigFilter.facingDirection = CameraConfig.FacingDirection.FRONT
-        val cameraConfigs =
-            arSceneView.session?.getSupportedCameraConfigs(cameraConfigFilter)
-        if (cameraConfigs?.isNotEmpty() == true) {
-            arSceneView.session?.cameraConfig = cameraConfigs[0]!!
-        }
+        // GPS 트래커 초기화 코드는 그대로 유지됩니다.
         gpsTracker = GpsTracker(this)
         viewModel.userLat = gpsTracker.userlatitude
         viewModel.userLong = gpsTracker.userlongitude

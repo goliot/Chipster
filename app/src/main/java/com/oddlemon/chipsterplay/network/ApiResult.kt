@@ -6,7 +6,6 @@ import kotlinx.coroutines.flow.flow
 import retrofit2.HttpException
 import retrofit2.Response
 
-
 sealed class ApiResult<out T> {
     data class Success<out T>(val value: T) : ApiResult<T>()
     object Empty : ApiResult<Nothing>()
@@ -44,7 +43,7 @@ sealed class ApiResult<out T> {
 
 data class ErrorResponse(
     val code: Int,
-    val message: String
+    val message: String?
 )
 
 fun <T> safeFlow(apiFunc: suspend () -> Response<T>): Flow<ApiResult<T>> = flow {
@@ -55,10 +54,11 @@ fun <T> safeFlow(apiFunc: suspend () -> Response<T>): Flow<ApiResult<T>> = flow 
             val body = res.body()
             if (body == null) {
                 val errorResponse = gson.fromJson(
-                    res.errorBody()!!.string(),
+                    res.errorBody()?.string(),
                     ErrorResponse::class.java
                 )
-                emit(ApiResult.Error(message = errorResponse.message))
+                val errorMessage = errorResponse?.message ?: "Unknown error"
+                emit(ApiResult.Error(message = errorMessage))
             } else {
                 emit(ApiResult.Success(body))
             }
@@ -67,24 +67,10 @@ fun <T> safeFlow(apiFunc: suspend () -> Response<T>): Flow<ApiResult<T>> = flow 
                 res.errorBody()?.string(),
                 ErrorResponse::class.java
             )
-            emit(ApiResult.Error(message = errorResponse.message))
+            val errorMessage = errorResponse?.message ?: "Unknown error"
+            emit(ApiResult.Error(message = errorMessage))
         }
-    } catch (e: NullPointerException) {
-        emit(ApiResult.Empty)
-    } catch (e: HttpException) {
-        val errorResponse = gson.fromJson(
-            res.errorBody()!!.string(),
-            ErrorResponse::class.java
-        )
-        emit(ApiResult.Error(message = errorResponse.message))
     } catch (e: Exception) {
-        val errorResponse = gson.fromJson(
-            res.errorBody()!!.string(),
-            ErrorResponse::class.java
-        )
-        emit(ApiResult.Error(message = errorResponse.message))
+        emit(ApiResult.Empty)
     }
 }
-
-
-
