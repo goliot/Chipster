@@ -8,7 +8,7 @@ import retrofit2.Response
 
 sealed class ApiResult<out T> {
     data class Success<out T>(val value: T) : ApiResult<T>()
-    object Empty : ApiResult<Nothing>()
+        object Empty : ApiResult<Nothing>()
     data class Error(
         val exception: Throwable? = null,
         var message: String? = ""

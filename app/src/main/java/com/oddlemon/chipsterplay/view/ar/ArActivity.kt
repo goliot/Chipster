@@ -43,6 +43,7 @@ import com.oddlemon.chipsterplay.util.Constants.MOVE_DETAIL
 import com.oddlemon.chipsterplay.util.Constants.MOVE_MAIN
 import com.oddlemon.chipsterplay.util.Constants.MOVE_MAP
 import com.oddlemon.chipsterplay.view.ar.ArpocaViewModel.Companion.POCATEXT_LOADING
+import com.oddlemon.chipsterplay.view.ar.ArpocaViewModel.Companion.POCATEXT_1KM
 import kotlinx.coroutines.*
 import uk.co.appoly.arcorelocation.LocationMarker
 import uk.co.appoly.arcorelocation.LocationScene
@@ -170,6 +171,7 @@ class ArActivity : AppCompatActivity() {
                 renderable = viewRenderable
                 localPosition = Vector3(0f, 0f, -1f) // View의 위치 설정
             })
+            //binding.scanningTv.text = POCATEXT_1KM
         }
     }
 
@@ -530,43 +532,41 @@ private fun completeArLayout() {
     override fun onResume() {
         super.onResume()
         if (arSceneView.session == null) {
-            // 세션이 아직 만들어지지 않은 경우 렌더링을 다시 시작하지 마십시오.
-            // ARCore를 업데이트해야 하거나 사용 권한이 아직 부여되지 않은 경우 이 문제가 발생할 수 있습니다
             try {
                 val session: Session? = DemoUtils.createArSession(this@ArActivity, viewModel.installRequested)
                 if (session == null) {
                     viewModel.installRequested = ARLocationPermissionHelper.hasPermission(this)
                     return
                 } else {
-                    // 세션 일시 중지
-                    session.pause()
                     arSceneView.setupSession(session)
-                    // 카메라 구성 설정 코드 추가
+                    session.resume() // AR 세션을 설정한 후에 재개
                     val cameraConfigFilter = CameraConfigFilter(session)
                     cameraConfigFilter.facingDirection = CameraConfig.FacingDirection.FRONT
                     val cameraConfigs = session.getSupportedCameraConfigs(cameraConfigFilter)
                     if (cameraConfigs.isNotEmpty()) {
                         arSceneView.session?.cameraConfig = cameraConfigs[0]
                     }
-                    // 세션 다시 재개
-                    session.resume()
                 }
             } catch (e: UnavailableException) {
                 DemoUtils.handleSessionException(this, e)
+                return
             }
         }
         try {
             arSceneView.resume()
             locationScene?.resume()
+            // GPS 트래커 초기화 코드는 그대로 유지됩니다.
+            gpsTracker = GpsTracker(this)
+            viewModel.userLat = gpsTracker.userlatitude
+            viewModel.userLong = gpsTracker.userlongitude
+            print(viewModel.userLat)
+            print('\n')
+            print(viewModel.userLong)
         } catch (ex: CameraNotAvailableException) {
             DemoUtils.displayError(this, "Unable to get camera", ex)
             onFinish(MOVE_MAIN)
             return
         }
-        // GPS 트래커 초기화 코드는 그대로 유지됩니다.
-        gpsTracker = GpsTracker(this)
-        viewModel.userLat = gpsTracker.userlatitude
-        viewModel.userLong = gpsTracker.userlongitude
     }
 
     public override fun onPause() {
