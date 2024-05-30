@@ -172,6 +172,7 @@ class ArActivity : AppCompatActivity() {
                 localPosition = Vector3(0f, 0f, -1f) // View의 위치 설정
             })
             //binding.scanningTv.text = POCATEXT_1KM
+            observePoca()
         }
     }
 
@@ -529,7 +530,7 @@ private fun completeArLayout() {
 //        viewModel.userLat = gpsTracker.userlatitude
 //        viewModel.userLong = gpsTracker.userlongitude
 //    }
-    override fun onResume() {
+    override fun onResume() { //정상 작동 함수임 건들지 말것_240529_차수민
         super.onResume()
         if (arSceneView.session == null) {
             try {
