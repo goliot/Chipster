@@ -7,6 +7,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.oddlemon.chipsterplay.domain.model.Location
 import com.oddlemon.chipsterplay.domain.repository.ArpocaRepository
 import com.oddlemon.chipsterplay.network.RestfulAdapter
 import com.oddlemon.chipsterplay.domain.model.PackInfo
@@ -42,6 +44,9 @@ class ArpocaViewModel : ViewModel() {
     private val _packInfo = MutableLiveData<PackInfo>()
     val packInfo: LiveData<PackInfo> get() = _packInfo
 
+    private val _location = MutableLiveData<Location>()
+    val location: LiveData<Location> get() = _location
+
     private val _isLoading: MutableLiveData<Boolean> = MutableLiveData(false)
     val isLoading: LiveData<Boolean> get() = _isLoading
 
@@ -63,6 +68,21 @@ class ArpocaViewModel : ViewModel() {
             result.handleResponse(onError = onError) { res ->
                 _packInfo.value = res.packInfo
                 _pocas.value = res.pocas
+            }
+        }
+    }
+
+    fun getPocasLocationWithLocationId(
+        locationId: Int,
+        onError: (String) -> Unit
+    ) = viewModelScope.launch {
+        arpocaRepository.findLocationByLocationId(
+            locationId = locationId,
+            onLoading = ::setLoadingTrue,
+            onComplete = ::setLoadingFalse
+        ).collectLatest { result ->
+            result.handleResponse(onError = onError) { res ->
+                _location.value = res.location
             }
         }
     }

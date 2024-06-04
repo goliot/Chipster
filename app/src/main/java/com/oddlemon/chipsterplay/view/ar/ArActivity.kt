@@ -180,9 +180,13 @@ class ArActivity : AppCompatActivity() {
     private fun observePoca() {
         viewModel.pocas.observe(this) { pocas ->
             val closedPoca = pocas.minByOrNull { poca ->
+                val latitude = poca.locations[0].latitude.toDouble()
+                val longitude = poca.locations[0].longitude.toDouble()
                 distanceOf(
-                    poca.latitude,
-                    poca.longitude,
+//                    poca.locations,
+//                    poca.longitude,
+                    latitude,
+                    longitude,
                     gpsTracker.userlatitude,
                     gpsTracker.userlongitude,
                     "meter"
@@ -195,9 +199,12 @@ class ArActivity : AppCompatActivity() {
 //            )
 
             ArPocaDistanceType.findByDistance(
+
                 distanceOf(
-                    closedPoca?.latitude ?: 0.0,
-                    closedPoca?.longitude ?: 0.0,
+//                    closedPoca?.latitude ?: 0.0,
+//                    closedPoca?.longitude ?: 0.0,
+                    1.1,
+                    1.1,
                     gpsTracker.userlatitude,
                     gpsTracker.userlongitude,
                     "meter"
@@ -212,8 +219,10 @@ class ArActivity : AppCompatActivity() {
             closedPoca?.let {
                 val startTime = System.currentTimeMillis()
                 val locationMarker = LocationMarker(
-                    it.longitude,
-                    it.latitude,
+//                    it.longitude,
+//                    it.latitude,
+                    1.1,
+                    1.1,
                     getArView(it)
                 ).apply {
 //                    setScaleAtDistance(false)
