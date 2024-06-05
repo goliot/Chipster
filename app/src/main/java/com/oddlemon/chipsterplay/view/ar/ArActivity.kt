@@ -28,6 +28,7 @@ import com.google.ar.core.exceptions.CameraNotAvailableException
 import com.google.ar.core.exceptions.UnavailableException
 import com.google.ar.sceneform.ArSceneView
 import com.google.ar.sceneform.Node
+import com.google.ar.sceneform.math.Quaternion
 import com.google.ar.sceneform.math.Vector3
 import com.google.ar.sceneform.rendering.FixedWidthViewSizer
 import com.google.ar.sceneform.rendering.ViewRenderable
@@ -51,6 +52,7 @@ import uk.co.appoly.arcorelocation.utils.ARLocationPermissionHelper
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
 import com.oddlemon.chipsterplay.R
+import java.io.Console
 
 class ArActivity : AppCompatActivity() {
 
@@ -169,7 +171,7 @@ class ArActivity : AppCompatActivity() {
             // AR Scene에 ViewRenderable 추가
             arSceneView.scene.addChild(Node().apply {
                 renderable = viewRenderable
-                localPosition = Vector3(0f, 0f, -1f) // View의 위치 설정
+                localPosition = Vector3(0f, 0f, 1f) // View의 위치 설정
             })
             //binding.scanningTv.text = POCATEXT_1KM
             observePoca()
@@ -180,13 +182,9 @@ class ArActivity : AppCompatActivity() {
     private fun observePoca() {
         viewModel.pocas.observe(this) { pocas ->
             val closedPoca = pocas.minByOrNull { poca ->
-                val latitude = poca.locations[0].latitude.toDouble()
-                val longitude = poca.locations[0].longitude.toDouble()
                 distanceOf(
-//                    poca.locations,
-//                    poca.longitude,
-                    latitude,
-                    longitude,
+                    poca.latitude,
+                    poca.longitude,
                     gpsTracker.userlatitude,
                     gpsTracker.userlongitude,
                     "meter"
@@ -199,12 +197,9 @@ class ArActivity : AppCompatActivity() {
 //            )
 
             ArPocaDistanceType.findByDistance(
-
                 distanceOf(
-//                    closedPoca?.latitude ?: 0.0,
-//                    closedPoca?.longitude ?: 0.0,
-                    1.1,
-                    1.1,
+                    closedPoca?.latitude ?: 0.0,
+                    closedPoca?.longitude ?: 0.0,
                     gpsTracker.userlatitude,
                     gpsTracker.userlongitude,
                     "meter"
@@ -219,25 +214,23 @@ class ArActivity : AppCompatActivity() {
             closedPoca?.let {
                 val startTime = System.currentTimeMillis()
                 val locationMarker = LocationMarker(
-//                    it.longitude,
-//                    it.latitude,
-                    1.1,
-                    1.1,
+                    it.longitude,
+                    it.latitude,
                     getArView(it)
                 ).apply {
-//                    setScaleAtDistance(false)
+                    setScaleAtDistance(false)
                     this.node.apply {
-//                        val lookRotation =
-//                            Quaternion.lookRotation(Vector3.zero(), Vector3.zero())
-//                        worldRotation = lookRotation
-//                        worldPosition = Vector3.one()
-//                        worldScale = Vector3.one()
+                        val lookRotation =
+                            Quaternion.lookRotation(Vector3.zero(), Vector3.zero())
+                        worldRotation = lookRotation
+                        worldPosition = Vector3.one()
+                        worldScale = Vector3.one()
                         setRenderEvent {
-//                            val cameraPosition = arSceneView.scene.camera.worldPosition
-//                            val direction = Vector3.subtract(cameraPosition, node.worldPosition)
-//                            val lookRotation = Quaternion.lookRotation(direction, Vector3.up())
-//                            node.worldRotation = lookRotation
-//                            worldScale = Vector3.one()
+                            val cameraPosition = arSceneView.scene.camera.worldPosition
+                            val direction = Vector3.subtract(cameraPosition, node.worldPosition)
+                            val lookRotation = Quaternion.lookRotation(direction, Vector3.up())
+                            node.worldRotation = lookRotation
+                            worldScale = Vector3.one()
                             worldScale = Vector3.add(worldScale, Vector3.one())
                         }
                     }
@@ -248,6 +241,7 @@ class ArActivity : AppCompatActivity() {
                 latency = endTime - startTime
             }
         }
+        //completeArLayout()
     }
 
 //    private fun completeArLayout() {
@@ -376,7 +370,7 @@ private fun completeArLayout() {
 
         base.setOnTouchListener { _, _ ->
             with(viewModel) {
-                if (isLoading.value == true) return@setOnTouchListener false
+                //if (isLoading.value == true) return@setOnTouchListener false
                 setLoadingTrue()
                 setUserDataWithPack(
                     userId = userId,
@@ -407,7 +401,7 @@ private fun completeArLayout() {
                         setLoadingFalse()
                     })
             }
-            false
+            true
         }
 
         return base

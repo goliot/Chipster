@@ -27,7 +27,9 @@ data class Poca(
     @SerializedName("address") val address: String,
     @SerializedName("register_time") val registerTime: String,
     @SerializedName("update_time") val updateTime: String,
-    @SerializedName("locations") val locations: List<Location>,
+    //@SerializedName("locations") val locations: List<Location>,
+    @SerializedName("latitude") val latitude: Double,
+    @SerializedName("longitude") val longitude: Double
 )
 
 
