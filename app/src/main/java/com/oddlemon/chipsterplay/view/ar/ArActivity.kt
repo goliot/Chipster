@@ -169,7 +169,7 @@ class ArActivity : AppCompatActivity() {
             viewRenderable.sizer = FixedWidthViewSizer(0.2f)
 
             // AR Scene에 ViewRenderable 추가
-            arSceneView.scene.addChild(Node().apply {
+            arSceneView.scene.addChild(Node().apply { //여기서 씬에 차일드로 모델을 넣고
                 renderable = viewRenderable
                 localPosition = Vector3(0f, 0f, 1f) // View의 위치 설정
             })
@@ -363,14 +363,63 @@ private fun completeArLayout() {
         }
     }
 
-    private fun getArView(item: Poca): Node {
-        // 이 함수 실행 시간을 측정
-        val base = Node()
-        base.renderable = arLayoutRenderable
+//    private fun getArView(item: Poca): Node {
+//        // 이 함수 실행 시간을 측정
+//        val base = Node()
+//        base.renderable = arLayoutRenderable
+//        base.isEnabled = true
+//
+//        base.setOnTouchListener { _, event ->
+//            Log.d("NodeTouch", "Node was touched: $event")
+//            with(viewModel) {
+//                //if (isLoading.value == true) return@setOnTouchListener false
+//                setLoadingTrue()
+//                setUserDataWithPack(
+//                    userId = userId,
+//                    packId = packId,
+//                    pocaId = item.id,
+//                    onError = {
+//                        showToastMessage(it) //여기 들어오면, 팩에 유저데이터가 삽입되지 않음
+//                        setLoadingFalse()
+//                    },
+//                    onSuccess = {
+//                        onPocaClick(
+//                            context = this@ArActivity,
+//                            onDrawableReady = { animatedDrawable ->
+//                                binding.getMotionIv.setImageDrawable(animatedDrawable)
+//                                animatedDrawable?.start()
+//                                onTouchMarker()
+//                                Handler(Looper.getMainLooper()).postDelayed({
+//                                    binding.getMotionEndedIv.setImageWithUrl(
+//                                        this@ArActivity,
+//                                        url = "https://chipsterplay.soundgram.co.kr/media/arpoca/307/pack_img/pack_img_1.png"
+//                                    )
+//                                    binding.getMotionEndedIv.show()
+//                                    binding.getMotionTv.text = "카드를 위아래로 휘리릭 돌려 보라구~!"
+//                                    binding.getMotionIv.setImageResource(0)
+//                                }, 3200)
+//                            },
+//                        )
+//                        setLoadingFalse()
+//                    })
+//            }
+//            true
+//        }
+//
+//        return base
+//    }
 
-        base.setOnTouchListener { _, _ ->
+    private fun getArView(item: Poca): Node {
+        val base = Node().apply {
+            renderable = arLayoutRenderable
+//            isClickable = true
+//            isFocusable = true
+            isEnabled = true
+        }
+
+        base.setOnTouchListener { _, event ->
+            Log.d("NodeTouch", "Node was touched: $event")
             with(viewModel) {
-                //if (isLoading.value == true) return@setOnTouchListener false
                 setLoadingTrue()
                 setUserDataWithPack(
                     userId = userId,
@@ -406,6 +455,7 @@ private fun completeArLayout() {
 
         return base
     }
+
 
     private fun onTouchMarker() {
         binding.apply {
