@@ -77,6 +77,7 @@ class ArActivity : AppCompatActivity() {
     private var latency = 0L
     private var fpsVisible = false
 
+    //getArView, setArView, observePoca 모델 링크 말고는 건들지 말기, 240611 차수민
     @RequiresApi(VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -152,6 +153,7 @@ class ArActivity : AppCompatActivity() {
 
     /** ARview를 생성한다. */
     private fun setArView() {
+//        val pocaThisTime = observePoca() //이번에 띄우고 있는 포카 정보
         arSceneView = binding.arSceneView
 
         // ViewRenderable 빌드
@@ -169,17 +171,26 @@ class ArActivity : AppCompatActivity() {
             viewRenderable.sizer = FixedWidthViewSizer(0.2f)
 
             // AR Scene에 ViewRenderable 추가
-            arSceneView.scene.addChild(Node().apply { //여기서 씬에 차일드로 모델을 넣고
+            val node = Node().apply {
                 renderable = viewRenderable
-                localPosition = Vector3(0f, 0f, 1f) // View의 위치 설정
-            })
+                localPosition = Vector3(0f, 0f, -1f) // View의 위치 설정
+            }
+            arSceneView.scene.addChild(node)
+
+            // Node 객체에 터치 이벤트 리스너를 설정합니다.
+//            node.setOnTapListener { hitTestResult, motionEvent ->
+//                Toast.makeText(
+//                    this@ArActivity, "터치 인식됨", Toast.LENGTH_LONG
+//                ).show()
+//            }
+
             //binding.scanningTv.text = POCATEXT_1KM
-            observePoca()
+            observePoca(node)
         }
     }
 
 
-    private fun observePoca() {
+    private fun observePoca(node: Node) {
         viewModel.pocas.observe(this) { pocas ->
             val closedPoca = pocas.minByOrNull { poca ->
                 distanceOf(
@@ -216,7 +227,7 @@ class ArActivity : AppCompatActivity() {
                 val locationMarker = LocationMarker(
                     it.longitude,
                     it.latitude,
-                    getArView(it)
+                    getArView(it, node)
                 ).apply {
                     setScaleAtDistance(false)
                     this.node.apply {
@@ -409,16 +420,17 @@ private fun completeArLayout() {
 //        return base
 //    }
 
-    private fun getArView(item: Poca): Node {
-        val base = Node().apply {
-            renderable = arLayoutRenderable
-//            isClickable = true
-//            isFocusable = true
-            isEnabled = true
-        }
+    private fun getArView(item: Poca, node: Node): Node {
+//        val base = Node().apply {
+//            renderable = arLayoutRenderable
+////            isClickable = true
+////            isFocusable = true
+//            isEnabled = true
+//        }
+        val base = node
+        node.setOnTapListener { hitTestResult, motionEvent ->
+            Toast.makeText(this@ArActivity, "터치 인식됨", Toast.LENGTH_LONG).show() //디버깅용 화면에 텍스트 띄우기
 
-        base.setOnTouchListener { _, event ->
-            Log.d("NodeTouch", "Node was touched: $event")
             with(viewModel) {
                 setLoadingTrue()
                 setUserDataWithPack(
@@ -452,7 +464,6 @@ private fun completeArLayout() {
             }
             true
         }
-
         return base
     }
 
